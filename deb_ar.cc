@@ -29,6 +29,8 @@ deb_ar::deb_ar(const char *fn)
     if (!mem)
         ERR("can't mmap '%s': %m\n", filename);
 
+    madvise(mem, len, MADV_SEQUENTIAL);
+
     if (!(arc = archive_read_new()))
         ERR("can't create a new libarchive object: %s\n", archive_error_string(arc));
 

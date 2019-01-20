@@ -91,6 +91,24 @@ deb_ar::~deb_ar()
     close(fd);
 }
 
+la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)
+{
+    deb_ar *ar = static_cast<deb_ar*>(c_data);
+
+    const void *ibuf;
+    size_t len;
+    off_t offset;
+    int err = archive_read_data_block(ar->arc, &ibuf, &len, &offset);
+    if (err > ARCHIVE_EOF)
+    {
+        ERR("can't read deb control from '%s': %s\n", ar->filename,
+            archive_error_string(arc));
+    }
+
+    *buf = ibuf;
+    return len;
+}
+
 int main()
 {
     deb_ar ar("dash.deb");

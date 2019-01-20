@@ -15,3 +15,5 @@ struct deb_ar
     void* mem;
     size_t len;
 };
+
+la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf);

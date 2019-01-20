@@ -108,11 +108,3 @@ la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)
     *buf = ibuf;
     return len;
 }
-
-int main()
-{
-    deb_ar ar("dash.deb");
-    ar.check_deb_binary();
-    ar.read_control();
-    return 0;
-}

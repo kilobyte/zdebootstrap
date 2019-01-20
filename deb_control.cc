@@ -20,8 +20,6 @@ deb_control::deb_control(deb_ar *parent_ar)
         ERR("can't create a new libarchive object: %s\n", archive_error_string(arc));
 
     archive_read_support_filter_gzip(arc);
-    archive_read_support_filter_bzip2(arc);
-    archive_read_support_filter_lzma(arc);
     archive_read_support_filter_xz(arc);
     archive_read_support_format_tar(arc);
 

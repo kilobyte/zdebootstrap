@@ -6,13 +6,13 @@
 #include <sys/mman.h>
 #include <string.h>
 
-#include "deb_comp.h"
+#include "deb_control.h"
 
 #include <stdio.h>
 #define ERR(...) do {fprintf(stderr, __VA_ARGS__); exit(1);} while (0)
 
 
-deb_comp::deb_comp(deb_ar *parent_ar)
+deb_control::deb_control(deb_ar *parent_ar)
 {
     ar = parent_ar;
 
@@ -46,7 +46,7 @@ deb_comp::deb_comp(deb_ar *parent_ar)
     }
 }
 
-deb_comp::~deb_comp()
+deb_control::~deb_control()
 {
     archive_read_free(arc);
 }

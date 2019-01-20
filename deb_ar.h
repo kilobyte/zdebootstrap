@@ -8,6 +8,7 @@ struct deb_ar
     ~deb_ar();
     void check_deb_binary();
     void read_control();
+    void read_data();
 
     const char *filename;
     struct archive *arc;

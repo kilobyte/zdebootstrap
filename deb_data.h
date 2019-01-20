@@ -2,10 +2,10 @@
 
 #include "deb_ar.h"
 
-struct deb_comp
+struct deb_data
 {
-    deb_comp(deb_ar *ar);
-    ~deb_comp();
+    deb_data(deb_ar *ar);
+    ~deb_data();
 
 private:
     deb_ar *ar;

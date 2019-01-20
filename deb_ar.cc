@@ -7,7 +7,8 @@
 #include <string.h>
 
 #include "deb_ar.h"
-#include "deb_comp.h"
+#include "deb_control.h"
+#include "deb_data.h"
 
 #include <stdio.h>
 #define ERR(...) do {fprintf(stderr, __VA_ARGS__); exit(1);} while (0)
@@ -81,7 +82,26 @@ void deb_ar::read_control()
             filename, ent_name);
     }
 
-    deb_comp control(this);
+    deb_control dctrl(this);
+}
+
+void deb_ar::read_data()
+{
+    struct archive_entry *ent;
+    if (archive_read_next_header(arc, &ent))
+    {
+        ERR("bad deb file '%s': no more ar entries, wanted data.tar*\n",
+            archive_error_string(arc));
+    }
+
+    const char *ent_name = archive_entry_pathname(ent);
+    if  (!ent_name || strncmp(ent_name, "data.tar", 8))
+    {
+        ERR("bad deb file '%s': wanted data.tar*, got '%s'\n",
+            filename, ent_name);
+    }
+
+    deb_data ddata(this);
 }
 
 deb_ar::~deb_ar()
@@ -101,7 +121,7 @@ la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)
     int err = archive_read_data_block(ar->arc, &ibuf, &len, &offset);
     if (err > ARCHIVE_EOF)
     {
-        ERR("can't read deb control from '%s': %s\n", ar->filename,
+        ERR("can't read deb contents from '%s': %s\n", ar->filename,
             archive_error_string(arc));
     }
 

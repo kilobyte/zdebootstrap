@@ -16,7 +16,7 @@ deb_ar::deb_ar(const char *fn)
 {
     filename = fn;
 
-    if (!(fd = open(filename, O_RDONLY)))
+    if ((fd = open(filename, O_RDONLY)) == -1)
         ERR("can't open '%s': %m\n", filename);
 
     struct stat st;

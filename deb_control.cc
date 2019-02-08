@@ -25,7 +25,7 @@ deb_control::deb_control(deb_ar *parent_ar)
 
     if (archive_read_open(arc, ar, 0, deb_ar_comp_read, 0))
     {
-        ERR("can't open deb control: '%s: %s'\n", ar->filename,
+        ERR("can't open deb control: '%s': %s\n", ar->filename,
             archive_error_string(arc));
     }
 

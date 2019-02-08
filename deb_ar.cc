@@ -27,7 +27,7 @@ deb_ar::deb_ar(const char *fn)
     printf("opening %s (size %zu)\n", filename, len);
 
     void *mem = mmap(0, len, PROT_READ, MAP_SHARED, fd, 0);
-    if (!mem)
+    if (mem == MAP_FAILED)
         ERR("can't mmap '%s': %m\n", filename);
 
     madvise(mem, len, MADV_SEQUENTIAL);

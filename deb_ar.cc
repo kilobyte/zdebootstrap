@@ -48,7 +48,7 @@ void deb_ar::check_deb_binary()
     if (archive_read_next_header(arc, &ent))
     {
         ERR("bad deb file '%s': no more ar entries, wanted debian-binary\n",
-            archive_error_string(arc));
+            filename);
     }
 
     const char *ent_name = archive_entry_pathname(ent);
@@ -72,7 +72,7 @@ void deb_ar::read_control()
     if (archive_read_next_header(arc, &ent))
     {
         ERR("bad deb file '%s': no more ar entries, wanted control.tar*\n",
-            archive_error_string(arc));
+            filename);
     }
 
     const char *ent_name = archive_entry_pathname(ent);
@@ -91,7 +91,7 @@ void deb_ar::read_data()
     if (archive_read_next_header(arc, &ent))
     {
         ERR("bad deb file '%s': no more ar entries, wanted data.tar*\n",
-            archive_error_string(arc));
+            filename);
     }
 
     const char *ent_name = archive_entry_pathname(ent);

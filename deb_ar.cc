@@ -23,7 +23,10 @@ deb_ar::deb_ar(const char *fn)
     struct stat st;
     if (fstat(fd, &st))
         ERR("can't stat '%s': %m\n", filename);
-    len = st.st_size;
+    if (!S_ISREG(st.st_mode))
+        ERR("not a regular file: '%s'\n", filename);
+    if (!(len = st.st_size))
+        ERR("empty deb file: '%s'\n", filename);
     printf("opening %s (size %zu)\n", filename, len);
 
     void *mem = mmap(0, len, PROT_READ, MAP_SHARED, fd, 0);

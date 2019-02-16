@@ -84,7 +84,7 @@ void deb::read_control()
             filename, ent_name);
     }
 
-    deb_control dctrl(this);
+    read_control_inner();
 }
 
 void deb::read_data()
@@ -115,15 +115,15 @@ deb::~deb()
 
 la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)
 {
-    deb *ar = static_cast<deb*>(c_data);
+    deb *pkg = static_cast<deb*>(c_data);
 
     const void *ibuf;
     size_t len;
     off_t offset;
-    int err = archive_read_data_block(ar->ar, &ibuf, &len, &offset);
+    int err = archive_read_data_block(pkg->ar, &ibuf, &len, &offset);
     if (err > ARCHIVE_EOF)
     {
-        ERR("can't read deb contents from '%s': %s\n", ar->filename,
+        ERR("can't read deb contents from '%s': %s\n", pkg->filename,
             archive_error_string(arc));
     }
 
@@ -131,42 +131,36 @@ la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)
     return len;
 }
 
-
-deb_control::deb_control(deb *parent_ar)
+void deb::read_control_inner()
 {
-    ar = parent_ar;
+    if (!(ac = archive_read_new()))
+        ERR("can't create a new libarchive object: %s\n", archive_error_string(ac));
 
-    if (!(arc = archive_read_new()))
-        ERR("can't create a new libarchive object: %s\n", archive_error_string(arc));
+    archive_read_support_filter_gzip(ac);
+    archive_read_support_filter_xz(ac);
+    archive_read_support_format_tar(ac);
 
-    archive_read_support_filter_gzip(arc);
-    archive_read_support_filter_xz(arc);
-    archive_read_support_format_tar(arc);
-
-    if (archive_read_open(arc, ar, 0, deb_ar_comp_read, 0))
+    if (archive_read_open(ac, this, 0, deb_ar_comp_read, 0))
     {
-        ERR("can't open deb control: '%s': %s\n", ar->filename,
-            archive_error_string(arc));
+        ERR("can't open deb control: '%s': %s\n", filename,
+            archive_error_string(ac));
     }
 
     struct archive_entry *ent;
     int err;
-    while (!(err = archive_read_next_header(arc, &ent)))
+    while (!(err = archive_read_next_header(ac, &ent)))
     {
         printf("%s\n", archive_entry_pathname(ent));
-        archive_read_data_skip(arc);
+        archive_read_data_skip(ac);
     }
 
     if (err != ARCHIVE_EOF)
     {
-        ERR("can't list deb control: '%s': %s\n", ar->filename,
-            archive_error_string(arc));
+        ERR("can't list deb control: '%s': %s\n", filename,
+            archive_error_string(ac));
     }
-}
 
-deb_control::~deb_control()
-{
-    archive_read_free(arc);
+    archive_read_free(ac);
 }
 
 

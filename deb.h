@@ -8,23 +8,14 @@ struct deb
     ~deb();
     void check_deb_binary();
     void read_control();
+    void read_control_inner();
     void read_data();
 
     const char *filename;
-    struct archive *ar;
+    struct archive *ar, *ac;
     int fd;
     void* ar_mem;
     size_t len;
-};
-
-struct deb_control
-{
-    deb_control(deb *ar);
-    ~deb_control();
-
-private:
-    deb *ar;
-    struct archive *arc;
 };
 
 struct deb_data

@@ -206,6 +206,6 @@ void deb::read_data_inner()
     if (err != ARCHIVE_EOF)
         ERR("can't list deb data: '%s': %s\n", filename, archive_error_string(ac));
 
-    archive_read_free(ac);
     archive_write_free(aw);
+    archive_read_free(ac);
 }

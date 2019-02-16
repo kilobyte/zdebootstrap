@@ -5,9 +5,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "deb_ar.h"
-#include "deb_control.h"
-#include "deb_data.h"
+#include "deb.h"
 #include "zdebootstrap.h"
 
 #define ERR(...) do {fprintf(stderr, __VA_ARGS__); exit(1);} while (0)

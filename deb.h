@@ -17,4 +17,22 @@ struct deb_ar
     size_t len;
 };
 
-la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf);
+struct deb_control
+{
+    deb_control(deb_ar *ar);
+    ~deb_control();
+
+private:
+    deb_ar *ar;
+    struct archive *arc;
+};
+
+struct deb_data
+{
+    deb_data(deb_ar *ar);
+    ~deb_data();
+
+private:
+    deb_ar *ar;
+    struct archive *arc, *aw;
+};

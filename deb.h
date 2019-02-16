@@ -2,37 +2,37 @@
 
 #include <archive.h>
 
-struct deb_ar
+struct deb
 {
-    deb_ar(const char *filename);
-    ~deb_ar();
+    deb(const char *filename);
+    ~deb();
     void check_deb_binary();
     void read_control();
     void read_data();
 
     const char *filename;
-    struct archive *arc;
+    struct archive *ar;
     int fd;
-    void* mem;
+    void* ar_mem;
     size_t len;
 };
 
 struct deb_control
 {
-    deb_control(deb_ar *ar);
+    deb_control(deb *ar);
     ~deb_control();
 
 private:
-    deb_ar *ar;
+    deb *ar;
     struct archive *arc;
 };
 
 struct deb_data
 {
-    deb_data(deb_ar *ar);
+    deb_data(deb *ar);
     ~deb_data();
 
 private:
-    deb_ar *ar;
+    deb *ar;
     struct archive *arc, *aw;
 };

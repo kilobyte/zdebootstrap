@@ -12,7 +12,7 @@
 #include <stdio.h>
 #define ERR(...) do {fprintf(stderr, __VA_ARGS__); exit(1);} while (0)
 
-deb_ar::deb_ar(const char *fn)
+deb::deb(const char *fn)
 {
     filename = fn;
 
@@ -28,26 +28,26 @@ deb_ar::deb_ar(const char *fn)
         ERR("empty deb file: '%s'\n", filename);
     printf("opening %s (size %zu)\n", filename, len);
 
-    void *mem = mmap(0, len, PROT_READ, MAP_SHARED, fd, 0);
-    if (mem == MAP_FAILED)
+    void *ar_mem = mmap(0, len, PROT_READ, MAP_SHARED, fd, 0);
+    if (ar_mem == MAP_FAILED)
         ERR("can't mmap '%s': %m\n", filename);
 
-    madvise(mem, len, MADV_SEQUENTIAL);
+    madvise(ar_mem, len, MADV_SEQUENTIAL);
 
-    if (!(arc = archive_read_new()))
-        ERR("can't create a new libarchive object: %s\n", archive_error_string(arc));
+    if (!(ar = archive_read_new()))
+        ERR("can't create a new libarchive object: %s\n", archive_error_string(ar));
 
-    archive_read_support_filter_none(arc);
-    archive_read_support_format_ar(arc);
+    archive_read_support_filter_none(ar);
+    archive_read_support_format_ar(ar);
 
-    if (archive_read_open_memory(arc, mem, len))
-        ERR("can't open deb ar: %s\n", archive_error_string(arc));
+    if (archive_read_open_memory(ar, ar_mem, len))
+        ERR("can't open deb ar: %s\n", archive_error_string(ar));
 }
 
-void deb_ar::check_deb_binary()
+void deb::check_deb_binary()
 {
     struct archive_entry *ent;
-    if (archive_read_next_header(arc, &ent))
+    if (archive_read_next_header(ar, &ent))
     {
         ERR("bad deb file '%s': no more ar entries, wanted debian-binary\n",
             filename);
@@ -61,17 +61,17 @@ void deb_ar::check_deb_binary()
     }
 
     char buf[5];
-    if (archive_read_data(arc, buf, 5) != 4)
+    if (archive_read_data(ar, buf, 5) != 4)
         ERR("bad deb file '%s': bad debian-binary\n", filename);
 
     if (memcmp(buf, "2.0\n", 4))
         ERR("bad deb file '%s': version not 2.0\n", filename);
 }
 
-void deb_ar::read_control()
+void deb::read_control()
 {
     struct archive_entry *ent;
-    if (archive_read_next_header(arc, &ent))
+    if (archive_read_next_header(ar, &ent))
     {
         ERR("bad deb file '%s': no more ar entries, wanted control.tar*\n",
             filename);
@@ -87,10 +87,10 @@ void deb_ar::read_control()
     deb_control dctrl(this);
 }
 
-void deb_ar::read_data()
+void deb::read_data()
 {
     struct archive_entry *ent;
-    if (archive_read_next_header(arc, &ent))
+    if (archive_read_next_header(ar, &ent))
     {
         ERR("bad deb file '%s': no more ar entries, wanted data.tar*\n",
             filename);
@@ -106,21 +106,21 @@ void deb_ar::read_data()
     deb_data ddata(this);
 }
 
-deb_ar::~deb_ar()
+deb::~deb()
 {
-    archive_read_free(arc);
-    munmap(mem, len);
+    archive_read_free(ar);
+    munmap(ar_mem, len);
     close(fd);
 }
 
 la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)
 {
-    deb_ar *ar = static_cast<deb_ar*>(c_data);
+    deb *ar = static_cast<deb*>(c_data);
 
     const void *ibuf;
     size_t len;
     off_t offset;
-    int err = archive_read_data_block(ar->arc, &ibuf, &len, &offset);
+    int err = archive_read_data_block(ar->ar, &ibuf, &len, &offset);
     if (err > ARCHIVE_EOF)
     {
         ERR("can't read deb contents from '%s': %s\n", ar->filename,
@@ -132,7 +132,7 @@ la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)
 }
 
 
-deb_control::deb_control(deb_ar *parent_ar)
+deb_control::deb_control(deb *parent_ar)
 {
     ar = parent_ar;
 
@@ -170,7 +170,7 @@ deb_control::~deb_control()
 }
 
 
-deb_data::deb_data(deb_ar *parent_ar)
+deb_data::deb_data(deb *parent_ar)
 {
     ar = parent_ar;
 

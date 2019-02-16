@@ -24,7 +24,7 @@ int main()
     if (chdir(target))
         ERR("can't chdir to '%s': %m\n", target);
 
-    deb_ar ar("dash.deb");
+    deb ar("dash.deb");
     ar.check_deb_binary();
     ar.read_control();
     ar.read_data();

@@ -14,6 +14,8 @@
 
 deb::deb(const char *fn)
 {
+    int fd;
+
     filename = fn;
 
     if ((fd = openat(orig_wd, filename, O_RDONLY)) == -1)
@@ -32,6 +34,7 @@ deb::deb(const char *fn)
     if (ar_mem == MAP_FAILED)
         ERR("can't mmap '%s': %m\n", filename);
 
+    close(fd);
     madvise(ar_mem, len, MADV_SEQUENTIAL);
 
     if (!(ar = archive_read_new()))
@@ -110,7 +113,6 @@ deb::~deb()
 {
     archive_read_free(ar);
     munmap(ar_mem, len);
-    close(fd);
 }
 
 la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)

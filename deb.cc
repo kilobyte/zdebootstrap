@@ -103,7 +103,7 @@ void deb::read_data()
             filename, ent_name);
     }
 
-    deb_data ddata(this);
+    read_data_inner();
 }
 
 deb::~deb()
@@ -164,18 +164,16 @@ void deb::read_control_inner()
 }
 
 
-deb_data::deb_data(deb *parent_ar)
+void deb::read_data_inner()
 {
-    ar = parent_ar;
+    if (!(ac = archive_read_new()))
+        ERR("can't create a new libarchive object: %s\n", archive_error_string(ac));
 
-    if (!(arc = archive_read_new()))
-        ERR("can't create a new libarchive object: %s\n", archive_error_string(arc));
-
-    archive_read_support_filter_gzip(arc);
-    archive_read_support_filter_bzip2(arc);
-    archive_read_support_filter_lzma(arc);
-    archive_read_support_filter_xz(arc);
-    archive_read_support_format_tar(arc);
+    archive_read_support_filter_gzip(ac);
+    archive_read_support_filter_bzip2(ac);
+    archive_read_support_filter_lzma(ac);
+    archive_read_support_filter_xz(ac);
+    archive_read_support_format_tar(ac);
 
     // TODO: free earlier allocs on error
     if (!(aw = archive_write_disk_new()))
@@ -190,33 +188,24 @@ deb_data::deb_data(deb *parent_ar)
         |ARCHIVE_EXTRACT_CLEAR_NOCHANGE_FFLAGS
         |ARCHIVE_EXTRACT_SECURE_SYMLINKS);
 
-    if (archive_read_open(arc, ar, 0, deb_ar_comp_read, 0))
-    {
-        ERR("can't open deb data: '%s': %s\n", ar->filename,
-            archive_error_string(arc));
-    }
+    if (archive_read_open(ac, this, 0, deb_ar_comp_read, 0))
+        ERR("can't open deb data: '%s': %s\n", filename, archive_error_string(ac));
 
     struct archive_entry *ent;
     int err;
-    while (!(err = archive_read_next_header(arc, &ent)))
+    while (!(err = archive_read_next_header(ac, &ent)))
     {
         printf("%s\n", archive_entry_pathname(ent));
-        if ((err = archive_read_extract2(arc, ent, aw)))
+        if ((err = archive_read_extract2(ac, ent, aw)))
         {
             ERR("error extracting deb entry '%s' from '%s': %s\n",
-                archive_entry_pathname(ent), ar->filename, archive_error_string(arc));
+                archive_entry_pathname(ent), filename, archive_error_string(ac));
         }
     }
 
     if (err != ARCHIVE_EOF)
-    {
-        ERR("can't list deb data: '%s': %s\n", ar->filename,
-            archive_error_string(arc));
-    }
-}
+        ERR("can't list deb data: '%s': %s\n", filename, archive_error_string(ac));
 
-deb_data::~deb_data()
-{
-    archive_read_free(arc);
+    archive_read_free(ac);
     archive_write_free(aw);
 }

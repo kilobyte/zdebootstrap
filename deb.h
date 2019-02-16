@@ -10,20 +10,13 @@ struct deb
     void read_control();
     void read_control_inner();
     void read_data();
+    void read_data_inner();
 
     const char *filename;
-    struct archive *ar, *ac;
+    struct archive *ar; // ar
+    struct archive *ac; // control.tar.gz, data.tar.gz
+    struct archive *aw; // file being extracted
     int fd;
     void* ar_mem;
     size_t len;
-};
-
-struct deb_data
-{
-    deb_data(deb *ar);
-    ~deb_data();
-
-private:
-    deb *ar;
-    struct archive *arc, *aw;
 };

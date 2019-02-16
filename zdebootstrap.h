@@ -1,3 +1,4 @@
 #pragma once
 
-const char *target;
+extern const char *target;
+extern int orig_wd;

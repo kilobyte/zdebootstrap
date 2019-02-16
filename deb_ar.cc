@@ -6,6 +6,7 @@
 #include <sys/mman.h>
 #include <string.h>
 
+#include "zdebootstrap.h"
 #include "deb_ar.h"
 #include "deb_control.h"
 #include "deb_data.h"
@@ -17,7 +18,7 @@ deb_ar::deb_ar(const char *fn)
 {
     filename = fn;
 
-    if ((fd = open(filename, O_RDONLY)) == -1)
+    if ((fd = openat(orig_wd, filename, O_RDONLY)) == -1)
         ERR("can't open '%s': %m\n", filename);
 
     struct stat st;

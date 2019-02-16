@@ -9,5 +9,5 @@ struct deb_data
 
 private:
     deb_ar *ar;
-    struct archive *arc;
+    struct archive *arc, *aw;
 };

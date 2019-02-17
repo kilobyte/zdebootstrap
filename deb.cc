@@ -18,7 +18,7 @@ deb::deb(const char *fn)
 
     filename = fn;
 
-    if ((fd = openat(orig_wd, filename, O_RDONLY)) == -1)
+    if ((fd = openat(orig_wd, filename, O_RDONLY|O_CLOEXEC|O_NOCTTY)) == -1)
         ERR("can't open '%s': %m\n", filename);
 
     struct stat st;

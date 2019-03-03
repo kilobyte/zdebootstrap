@@ -6,6 +6,7 @@ struct deb
 {
     deb(const char *filename);
     ~deb();
+    void unpack();
 
     void open_file();
     void check_deb_binary();

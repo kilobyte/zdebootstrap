@@ -25,9 +25,6 @@ int main()
         ERR("can't chdir to '%s': %m\n", target);
 
     deb ar("dash.deb");
-    ar.open_file();
-    ar.check_deb_binary();
-    ar.read_control();
-    ar.read_data();
+    ar.unpack();
     return 0;
 }

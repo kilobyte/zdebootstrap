@@ -214,3 +214,11 @@ void deb::read_data_inner()
     archive_write_free(aw);
     archive_read_free(ac);
 }
+
+void deb::unpack()
+{
+    open_file();
+    check_deb_binary();
+    read_control();
+    read_data();
+}

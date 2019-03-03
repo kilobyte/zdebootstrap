@@ -14,9 +14,12 @@
 
 deb::deb(const char *fn)
 {
-    int fd;
-
     filename = fn;
+}
+
+void deb::open_file()
+{
+    int fd;
 
     if ((fd = openat(orig_wd, filename, O_RDONLY|O_CLOEXEC|O_NOCTTY)) == -1)
         ERR("can't open '%s': %m\n", filename);

@@ -1,7 +1,7 @@
 ALL=zunpack
 
 CXX=g++
-CXXFLAGS=-Wall -g -O2
+CXXFLAGS=-Wall -g -O2 -pthread
 
 all: $(ALL)
 

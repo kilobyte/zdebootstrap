@@ -1,6 +1,7 @@
 #pragma once
 
 #include <archive.h>
+#include <string>
 
 struct deb
 {
@@ -16,6 +17,7 @@ struct deb
     void read_data_inner();
 
     const char *filename;
+    std::string basename;
     struct archive *ar; // ar
     struct archive *ac; // control.tar.gz, data.tar.gz
     struct archive *aw; // file being extracted

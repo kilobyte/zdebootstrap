@@ -15,6 +15,10 @@
 deb::deb(const char *fn)
 {
     filename = fn;
+
+    if (const char *ls = strrchr(fn, '/'))
+        fn = ls + 1;
+    basename = std::string(fn, strchrnul(fn, '_') - fn);
 }
 
 void deb::open_file()

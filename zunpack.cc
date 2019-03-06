@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "deb.h"
+#include "util.h"
 #include "zdebootstrap.h"
 
 #define ERR(...) do {fprintf(stderr, __VA_ARGS__); exit(1);} while (0)
@@ -31,7 +32,8 @@ int main(int argc, char **argv)
         ERR("Usage: zunpack a.deb b.deb...\n");
 
     target = "target";
-    mkdir(target, 0777); // TODO: mkdir -p
+    if (mkdir_p(target))
+        ERR("can't mkdir -p '%s': %m\n", target);
     if (chdir(target))
         ERR("can't chdir to '%s': %m\n", target);
 

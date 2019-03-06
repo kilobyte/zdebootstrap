@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+#include <string>
 #include <archive.h>
 #include <string>
 
@@ -15,6 +17,7 @@ struct deb
     void read_control_inner();
     void read_data();
     void read_data_inner();
+    void write_list();
 
     const char *filename;
     std::string basename;
@@ -23,4 +26,6 @@ struct deb
     struct archive *aw; // file being extracted
     void* ar_mem;
     size_t len;
+
+    std::vector<std::string> contents;
 };

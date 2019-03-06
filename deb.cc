@@ -8,6 +8,7 @@
 
 #include "zdebootstrap.h"
 #include "deb.h"
+#include "util.h"
 
 #include <stdio.h>
 #define ERR(...) do {fprintf(stderr, __VA_ARGS__); exit(1);} while (0)
@@ -114,6 +115,19 @@ void deb::read_data()
     }
 
     read_data_inner();
+    write_list();
+}
+
+void deb::write_list()
+{
+    mkdir_p("var/lib/dpkg/info");
+
+    FILE *f = fopen(("var/lib/dpkg/info/" + basename + ".list").c_str(), "w");
+    if (!f)
+        ERR("can't write to 'var/lib/dpkg/info/%s.list\n", basename.c_str());
+    for (auto ci = contents.cbegin(); ci != contents.cend(); ++ci)
+        fprintf(f, "%s\n", ci->c_str());
+    fclose(f);
 }
 
 deb::~deb()
@@ -204,7 +218,21 @@ void deb::read_data_inner()
     int err;
     while (!(err = archive_read_next_header(ac, &ent)))
     {
-        printf("%s\n", archive_entry_pathname(ent));
+        const char *fn = archive_entry_pathname(ent);
+        if (*fn == '.')
+            fn++;
+        if (*fn != '/')
+            ERR("filename inside '%s' not absolute: '%s'\n", filename, fn);
+        std::string fns = fn;
+        if (fns.back() == '/')
+        {
+            fns.pop_back();
+            if (fns.empty())
+                fns = "/."; // dpkg special-cases /
+        }
+
+        contents.emplace_back(fns);
+
         if ((err = archive_read_extract2(ac, ent, aw)))
         {
             ERR("error extracting deb entry '%s' from '%s': %s\n",

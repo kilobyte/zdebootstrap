@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -10,8 +9,6 @@
 #include "deb.h"
 #include "util.h"
 #include "zdebootstrap.h"
-
-#define ERR(...) do {fprintf(stderr, __VA_ARGS__); exit(1);} while (0)
 
 const char *target;
 int orig_wd;

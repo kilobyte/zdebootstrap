@@ -10,9 +10,6 @@
 #include "deb.h"
 #include "util.h"
 
-#include <stdio.h>
-#define ERR(...) do {fprintf(stderr, __VA_ARGS__); exit(1);} while (0)
-
 deb::deb(const char *fn)
 {
     filename = fn;

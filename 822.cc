@@ -71,6 +71,16 @@ deb822::deb822(const char *in)
         contents.push_back(par);
 }
 
+static void print_del(std::unordered_map<std::string, std::string> &par, const std::string &k)
+{
+    auto it = par.find(k);
+    if (it == par.cend())
+        return;
+
+    printf("%s: %s\n", it->first.c_str(), it->second.c_str());
+    par.erase(it);
+}
+
 void deb822::fprint(FILE *f)
 {
     bool cont = false;
@@ -82,7 +92,29 @@ void deb822::fprint(FILE *f)
         else
             cont = true;
 
+        // Print common elements in customary order.
+        print_del(*v, "Package");
+        print_del(*v, "Status");
+        print_del(*v, "Priority");
+        print_del(*v, "Section");
+        print_del(*v, "Installed-Size");
+        print_del(*v, "Maintainer");
+        print_del(*v, "Multi-Arch");
+        print_del(*v, "Source");
+        print_del(*v, "Version");
+        print_del(*v, "Provides");
+        print_del(*v, "Replaces");
+        print_del(*v, "Depends");
+        print_del(*v, "Recommends");
+        print_del(*v, "Suggests");
+        print_del(*v, "Conflicts");
+        print_del(*v, "Breaks");
+        print_del(*v, "Conffiles");
+        print_del(*v, "Description");
+        print_del(*v, "Homepage");
+
+        // Place non-standard ones at the end.
         for (auto p=v->cbegin(); p!=v->cend(); ++p)
             printf("%s: %s\n", p->first.c_str(), p->second.c_str());
-    }    
+    }
 }

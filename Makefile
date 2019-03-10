@@ -8,7 +8,7 @@ all: $(ALL)
 .cc.o:
 	$(CXX) $(CXXFLAGS) -c $<
 
-zunpack: deb.o util.o zunpack.o 822.o
+zunpack: deb.o util.o zunpack.o 822.o globals.o
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $@ $^ -larchive
 
 clean:

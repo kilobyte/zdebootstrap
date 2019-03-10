@@ -10,9 +10,6 @@
 #include "util.h"
 #include "zdebootstrap.h"
 
-const char *target;
-int orig_wd;
-
 static void* unpack_thread(void* arg)
 {
     deb pkg((const char*)arg);

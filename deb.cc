@@ -10,7 +10,7 @@
 #include "deb.h"
 #include "util.h"
 
-deb::deb(const char *fn)
+deb::deb(const char *fn) : ar(0), ar_mem(0)
 {
     filename = fn;
 
@@ -129,8 +129,10 @@ void deb::write_list()
 
 deb::~deb()
 {
-    archive_read_free(ar);
-    munmap(ar_mem, len);
+    if (ar)
+        archive_read_free(ar);
+    if (ar_mem)
+        munmap(ar_mem, len);
 }
 
 la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)

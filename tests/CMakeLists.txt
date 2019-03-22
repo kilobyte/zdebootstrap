@@ -1,0 +1,11 @@
+function(build_test name)
+	add_executable(${name} ${name}.cc ${SOURCES})
+	target_link_libraries(${name} -larchive)
+endfunction()
+
+function(test_prog name)
+	build_test(${name})
+	add_test(${name} ${name})
+endfunction()
+
+test_prog(noar)

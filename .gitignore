@@ -1,3 +1,10 @@
 *~
 *.o
 zunpack
+*.cmake
+CMakeCache.txt
+CMakeFiles/
+Testing/
+Makefile
+
+target/

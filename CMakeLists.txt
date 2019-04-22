@@ -6,6 +6,7 @@ include(FindThreads)
 set(SOURCES
 	${CMAKE_SOURCE_DIR}/deb.cc
 	${CMAKE_SOURCE_DIR}/822.cc
+	${CMAKE_SOURCE_DIR}/tqueue.cc
 	${CMAKE_SOURCE_DIR}/util.cc
 	${CMAKE_SOURCE_DIR}/globals.cc)
 

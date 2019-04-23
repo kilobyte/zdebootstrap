@@ -16,6 +16,15 @@ static void unpack_thread(const char* arg)
     pkg.unpack();
 }
 
+static unsigned parse_u(const char *arg, const char *errmsg)
+{
+    char *end;
+    unsigned val = strtoul(arg, &end, 10);
+    if (*end)
+        ERR("%s: '%s'\n", errmsg, arg);
+    return val;
+}
+
 int main(int argc, char **argv)
 {
     if ((orig_wd = open(".", O_RDONLY|O_DIRECTORY|O_PATH|O_CLOEXEC)) == -1)
@@ -29,11 +38,18 @@ int main(int argc, char **argv)
         {0}
     };
 
+    unsigned nthreads=0;
     int opt;
-    while ((opt = getopt_long(argc, argv, "t:", options, 0)) != -1)
+    while ((opt = getopt_long(argc, argv, "t:j:", options, 0)) != -1)
     {
         switch (opt)
         {
+        case 'j':
+            if (*optarg)
+                nthreads = parse_u(optarg, "not a number for -j");
+            if (nthreads > 4096)
+                ERR("insane number of threads requested\n");
+            break;
         case 't':
             target = optarg;
             break;
@@ -50,7 +66,7 @@ int main(int argc, char **argv)
     if (chdir(target))
         ERR("can't chdir to '%s': %m\n", target);
 
-    tqueue slaves(unpack_thread);
+    tqueue slaves(unpack_thread, nthreads);
     for (int i=optind; i<argc; i++)
         slaves.put(argv[i]);
 

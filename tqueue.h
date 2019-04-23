@@ -6,7 +6,7 @@ typedef void tworker_t(const char *arg);
 
 struct tqueue
 {
-    tqueue(tworker_t *worker);
+    tqueue(tworker_t *worker, int nthreads);
     ~tqueue(void);
     void put(const char *item);
     void finish(void) { done=1; wakeall(); }

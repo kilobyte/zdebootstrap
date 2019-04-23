@@ -4,12 +4,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-tqueue::tqueue(tworker_t *w): worker(w), idle(0), done(0) 
+tqueue::tqueue(tworker_t *w, int nthreads): worker(w), idle(0), done(0)
 {
     pthread_mutex_init(&mut, nullptr);
     pthread_cond_init(&moar, nullptr);
 
-    unspawned = sysconf(_SC_NPROCESSORS_CONF);
+    unspawned = nthreads? nthreads : sysconf(_SC_NPROCESSORS_CONF);
 }
 
 tqueue::~tqueue(void)

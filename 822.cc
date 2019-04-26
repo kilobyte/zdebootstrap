@@ -16,7 +16,10 @@ static void get_entry(std::unordered_map<std::string, std::string> &par, const c
         in++;
 
     if (nameB==in || *in!=':')
-        ERR("not a valid name:value in deb822: '%.64s'\n", nameB);
+    {
+        ERR("not a valid name:value in deb822: '%.*s'\n",
+            strchrnul(nameB, '\n')-nameB, nameB);
+    }
 
     const char *nameE = in++;
     in+=strspn(in, " \t");

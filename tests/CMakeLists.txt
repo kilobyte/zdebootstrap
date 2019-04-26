@@ -11,3 +11,6 @@ function(test_prog name)
 endfunction()
 
 test_prog(noar)
+
+build_test(re822)
+add_test(822 ./runtests ./re822 ./822)

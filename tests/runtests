@@ -1,0 +1,30 @@
+#!/bin/sh
+
+prog="$1"
+if [ -z "$prog" ];then echo >&2 "No prog given."; exit 1; fi
+shift
+
+err=0
+
+trap 'rm -f test-out.$$ test-err.$$' 0
+
+fcmp()
+{
+    if [ -e "$T.$1" ]
+      then
+        diff -u "$T.$1" test-$1.$$ || err=1
+      else
+        diff -u /dev/null test-$1.$$ || err=1
+    fi
+}
+
+for T in "$1/"*.in
+  do
+    T="${T%.in}"
+    echo "$T"
+    $prog <"$T".in >test-out.$$ 2>test-err.$$
+    fcmp out
+    fcmp err
+  done
+
+exit $err

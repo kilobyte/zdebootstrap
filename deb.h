@@ -20,6 +20,8 @@ struct deb
     void read_data();
     void read_data_inner();
     void write_list();
+    const std::string& field(const std::string& name);
+    const std::string& field(const std::string& name, const std::string& none);
 
     const char *filename;
     std::string basename;

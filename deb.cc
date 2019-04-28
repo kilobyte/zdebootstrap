@@ -10,13 +10,8 @@
 #include "deb.h"
 #include "util.h"
 
-deb::deb(const char *fn) : ar(0), ar_mem(0)
+deb::deb(const char *fn) : filename(fn), ar(0), ar_mem(0)
 {
-    filename = fn;
-
-    if (const char *ls = strrchr(fn, '/'))
-        fn = ls + 1;
-    basename = std::string(fn, strchrnul(fn, '_') - fn);
 }
 
 void deb::open_file()
@@ -76,6 +71,36 @@ void deb::check_deb_binary()
         ERR("bad deb file '%s': version not 2.0\n", filename);
 }
 
+static bool is_valid_name(const char *s)
+{
+    if (*s<'0' || *s>'9' && *s<'a' || *s>'z')
+        return false;
+
+    for (s++; *s; s++)
+        if (*s!='.' && *s<'0' || *s>'9' && *s<'a' || *s>'z')
+            return false;
+
+    return true;
+}
+
+const std::string& deb::field(const std::string& name)
+{
+    // Already checked there's exactly one paragraph.
+    const auto f = control.contents[0].find(name);
+    if (f == control.contents[0].cend())
+        ERR("deb '%s': field '%s' missing\n", filename, name.c_str());
+    return f->second;
+}
+
+const std::string& deb::field(const std::string& name, const std::string& none)
+{
+    // Already checked there's exactly one paragraph.
+    const auto f = control.contents[0].find(name);
+    if (f == control.contents[0].cend())
+        return none;
+    return f->second;
+}
+
 void deb::read_control()
 {
     struct archive_entry *ent;
@@ -93,7 +118,27 @@ void deb::read_control()
     }
 
     read_control_inner();
-    control.fprint(stdout);
+
+    if (control.contents.size() != 1)
+    {
+        ERR("deb '%s': control has %zu paragraphs instead of one\n",
+            filename, control.contents.size());
+    }
+
+    const std::string& package = field("Package");
+    const std::string& ma = field("Multi-Arch", "");
+    const std::string& arch = field("Architecture");
+    if (!is_valid_name(package.c_str()))
+        ERR("deb '%s': invalid control/Package: '%s'\n", filename, package.c_str());
+    if (!is_valid_name(arch.c_str()))
+        ERR("deb '%s': invalid control/Architecture: '%s'\n", filename, arch.c_str());
+
+    if (ma == "same")
+        basename = package + ":" + arch;
+    else
+        basename = package;
+
+    printf("%s\n", basename.c_str());
 }
 
 void deb::read_data()

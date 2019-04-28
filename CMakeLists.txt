@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.3)
 project(zdebootstrap CXX)
 
+if(NOT CMAKE_BUILD_TYPE)
+	set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+endif (NOT CMAKE_BUILD_TYPE)
+
 include(FindThreads)
 
 set(SOURCES

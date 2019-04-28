@@ -4,6 +4,7 @@
 #include <string>
 #include <archive.h>
 #include <string>
+#include "822.h"
 
 struct deb
 {
@@ -15,6 +16,7 @@ struct deb
     void check_deb_binary();
     void read_control();
     void read_control_inner();
+    void slurp_control_file();
     void read_data();
     void read_data_inner();
     void write_list();
@@ -28,4 +30,5 @@ struct deb
     size_t len;
 
     std::vector<std::string> contents;
+    deb822 control;
 };

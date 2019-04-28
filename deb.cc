@@ -93,6 +93,7 @@ void deb::read_control()
     }
 
     read_control_inner();
+    control.fprint(stdout);
 }
 
 void deb::read_data()
@@ -135,6 +136,20 @@ deb::~deb()
         munmap(ar_mem, len);
 }
 
+void deb::slurp_control_file()
+{
+    char buf[4096];
+    la_ssize_t len;
+    std::string txt;
+
+    while ((len = archive_read_data(ac, buf, len)) > 0)
+        txt.append(buf, len);
+    if (len < 0)
+        ERR("%s\n", archive_error_string(ac));
+
+    control.parse(txt.c_str());
+}
+
 la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)
 {
     deb *pkg = static_cast<deb*>(c_data);
@@ -172,8 +187,11 @@ void deb::read_control_inner()
     int err;
     while (!(err = archive_read_next_header(ac, &ent)))
     {
-        printf("%s\n", archive_entry_pathname(ent));
-        archive_read_data_skip(ac);
+        const char *cf = archive_entry_pathname(ent);
+        if (!strcmp(cf, "./control"))
+            slurp_control_file();
+        else
+            archive_read_data_skip(ac);
     }
 
     if (err != ARCHIVE_EOF)

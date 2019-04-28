@@ -5,6 +5,7 @@ if(NOT CMAKE_BUILD_TYPE)
 	set(CMAKE_BUILD_TYPE "RelWithDebInfo")
 endif (NOT CMAKE_BUILD_TYPE)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
 include(FindThreads)
 
 set(SOURCES

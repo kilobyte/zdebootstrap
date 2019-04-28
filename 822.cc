@@ -48,7 +48,7 @@ static void get_entry(std::map<std::string, std::string> &par, const char *&in)
     par.emplace(name, std::string(valB, (int)(valE-valB)));
 }
 
-deb822::deb822(const char *in)
+void deb822::parse(const char *in)
 {
     std::map<std::string, std::string> par;
 

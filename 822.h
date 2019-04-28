@@ -4,7 +4,7 @@
 
 struct deb822
 {
-    deb822(const char *in);
+    void parse(const char *in);
     void fprint(FILE *f);
 
     std::vector<std::map<std::string, std::string>> contents;

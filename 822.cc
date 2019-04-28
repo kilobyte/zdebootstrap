@@ -97,24 +97,37 @@ void deb822::fprint(FILE *f)
 
         // Print common elements in customary order.
         print_del(*v, "Package");
+        print_del(*v, "Essential");
         print_del(*v, "Status");
         print_del(*v, "Priority");
         print_del(*v, "Section");
         print_del(*v, "Installed-Size");
+        print_del(*v, "Origin");
         print_del(*v, "Maintainer");
+        print_del(*v, "Bugs");
+        print_del(*v, "Architecture");
         print_del(*v, "Multi-Arch");
         print_del(*v, "Source");
         print_del(*v, "Version");
-        print_del(*v, "Provides");
+        print_del(*v, "Revision");
+        print_del(*v, "Config-Version");
         print_del(*v, "Replaces");
+        print_del(*v, "Provides");
         print_del(*v, "Depends");
+        print_del(*v, "Pre-Depends");
         print_del(*v, "Recommends");
         print_del(*v, "Suggests");
-        print_del(*v, "Conflicts");
         print_del(*v, "Breaks");
+        print_del(*v, "Conflicts");
+        print_del(*v, "Enhances");
         print_del(*v, "Conffiles");
+        print_del(*v, "Filename");
+        print_del(*v, "Size");
+        print_del(*v, "MD5sum");
+        print_del(*v, "MSDOS-Filename");
         print_del(*v, "Description");
-        print_del(*v, "Homepage");
+        print_del(*v, "Triggers-Pending");
+        print_del(*v, "Triggers-Awaited");
 
         // Place non-standard ones at the end.
         for (auto p=v->cbegin(); p!=v->cend(); ++p)

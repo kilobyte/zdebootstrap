@@ -9,7 +9,7 @@ static bool is_name_char(char c)
     return (c>='!' && c<='9') || (c>=';' && c<='~');
 }
 
-static void get_entry(std::unordered_map<std::string, std::string> &par, const char *&in)
+static void get_entry(std::map<std::string, std::string> &par, const char *&in)
 {
     const char *nameB = in;
     while (is_name_char(*in))
@@ -50,7 +50,7 @@ static void get_entry(std::unordered_map<std::string, std::string> &par, const c
 
 deb822::deb822(const char *in)
 {
-    std::unordered_map<std::string, std::string> par;
+    std::map<std::string, std::string> par;
 
     while (1)
     {
@@ -74,7 +74,7 @@ deb822::deb822(const char *in)
         contents.push_back(par);
 }
 
-static void print_del(std::unordered_map<std::string, std::string> &par, const std::string &k)
+static void print_del(std::map<std::string, std::string> &par, const std::string &k)
 {
     auto it = par.find(k);
     if (it == par.cend())

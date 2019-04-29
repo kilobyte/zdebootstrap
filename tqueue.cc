@@ -62,14 +62,14 @@ void tqueue::slave(void)
     }
 }
 
-void tqueue::put(const char *item)
+void tqueue::put(const char *item, bool spawn)
 {
     pthread_mutex_lock(&mut);
     q.push(strdup(item));
 
     if (idle)
         pthread_cond_signal(&moar);
-    else if (unspawned)
+    else if (spawn && unspawned)
     {
         unspawned--;
 

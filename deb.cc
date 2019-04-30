@@ -220,6 +220,7 @@ void deb::read_control_inner()
 
     archive_read_support_filter_gzip(ac);
     archive_read_support_filter_xz(ac);
+    archive_read_support_filter_zstd(ac);
     archive_read_support_format_tar(ac);
 
     if (archive_read_open(ac, this, 0, deb_ar_comp_read, 0))
@@ -258,6 +259,7 @@ void deb::read_data_inner()
     archive_read_support_filter_bzip2(ac);
     archive_read_support_filter_lzma(ac);
     archive_read_support_filter_xz(ac);
+    archive_read_support_filter_zstd(ac);
     archive_read_support_format_tar(ac);
 
     // TODO: free earlier allocs on error

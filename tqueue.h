@@ -1,5 +1,5 @@
 #include <queue>
-#include <stack>
+#include <plf_colony.h>
 #include <pthread.h>
 
 typedef void tworker_t(const char *arg);
@@ -16,7 +16,7 @@ private:
     void wakeall(void);
     void kill_slaves(void);
     std::queue<char *> q;
-    std::stack<pthread_t> slaves;
+    plf::colony<pthread_t> slaves;
     tworker_t *worker;
     int unspawned;
     int idle;

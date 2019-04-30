@@ -76,7 +76,7 @@ void tqueue::put(const char *item, bool spawn)
         pthread_t th;
         if (pthread_create(&th, 0, slaveth, (void*)this))
             ERR("can't create thread: %m");
-        slaves.push(th);
+        slaves.insert(th);
     }
     pthread_mutex_unlock(&mut);
 }
@@ -90,11 +90,6 @@ void tqueue::wakeall(void)
 
 void tqueue::kill_slaves(void)
 {
-    pthread_t th;
-    while (!slaves.empty())
-    {
-        th = slaves.top();
-        slaves.pop();
-        pthread_join(th, nullptr);
-    }
+    for (auto c = slaves.cbegin(); c!=slaves.cend(); c=slaves.erase(c))
+        pthread_join(*c, nullptr);
 }

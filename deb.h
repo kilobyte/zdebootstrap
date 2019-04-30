@@ -1,7 +1,6 @@
 #pragma once
 
-#include <vector>
-#include <string>
+#include <plf_colony.h>
 #include <archive.h>
 #include <string>
 #include "822.h"
@@ -31,6 +30,6 @@ struct deb
     void* ar_mem;
     size_t len;
 
-    std::vector<std::string> contents;
+    plf::colony<std::string> contents;
     deb822 control;
 };

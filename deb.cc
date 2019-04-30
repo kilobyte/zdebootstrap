@@ -293,7 +293,7 @@ void deb::read_data_inner()
                 fns = "/."; // dpkg special-cases /
         }
 
-        contents.emplace_back(fns);
+        contents.emplace(fns);
 
         if ((err = archive_read_extract2(ac, ent, aw)))
         {

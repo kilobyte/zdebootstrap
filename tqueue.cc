@@ -91,6 +91,6 @@ void tqueue::wakeall(void)
 
 void tqueue::kill_slaves(void)
 {
-    for (auto c = slaves.cbegin(); c!=slaves.cend(); c=slaves.erase(c))
+    for (auto c = slaves.begin(); c!=slaves.end(); c=slaves.erase(c))
         pthread_join(*c, nullptr);
 }

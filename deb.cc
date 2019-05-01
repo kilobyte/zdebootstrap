@@ -2,6 +2,7 @@
 #include <archive_entry.h>
 #include <sys/types.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <string.h>
@@ -28,23 +29,39 @@ void deb::open_file()
         ERR("not a regular file: '%s'\n", filename);
     if (!(len = st.st_size))
         ERR("empty deb file: '%s'\n", filename);
+    if (len < 256)
+        ERR("implausible small deb file: '%s'\n", filename);
     printf("opening %s (size %zu)\n", filename, len);
 
-    void *ar_mem = mmap(0, len, PROT_READ, MAP_SHARED, fd, 0);
+    ar_mem = (char*)mmap(0, len, PROT_READ, MAP_SHARED, fd, 0);
     if (ar_mem == MAP_FAILED)
         ERR("can't mmap '%s': %m\n", filename);
 
     close(fd);
     madvise(ar_mem, len, MADV_SEQUENTIAL);
 
-    if (!(ar = archive_read_new()))
-        ERR("can't create a new libarchive object: %s\n", archive_error_string(ar));
+    if (memcmp(ar_mem, "0.939000\n", 9))
+    {
+        if (!(ar = archive_read_new()))
+            ERR("can't create a new libarchive object: %s\n", archive_error_string(ar));
 
-    archive_read_support_filter_none(ar);
-    archive_read_support_format_ar(ar);
+        archive_read_support_filter_none(ar);
+        archive_read_support_format_ar(ar);
 
-    if (archive_read_open_memory(ar, ar_mem, len))
-        ERR("can't open deb ar: %s\n", archive_error_string(ar));
+        if (archive_read_open_memory(ar, ar_mem, len))
+            ERR("can't open deb ar: %s\n", archive_error_string(ar));
+    }
+    else
+    {
+        char *endptr;
+        size_t clen = strtoul(ar_mem+9, &endptr, 10);
+        if (clen<64 || clen==ULONG_MAX || *endptr!='\n')
+            ERR("deb has invalid clen: %s\n", filename);
+        c_mem = endptr+1;
+        if (c_mem-ar_mem+clen > len)
+            ERR("deb has truncated control file: %s\n", filename);
+        d_mem = c_mem+clen;
+    }
 }
 
 void deb::check_deb_binary()
@@ -103,18 +120,21 @@ const std::string& deb::field(const std::string& name, const std::string& none)
 
 void deb::read_control()
 {
-    struct archive_entry *ent;
-    if (archive_read_next_header(ar, &ent))
+    if (ar)
     {
-        ERR("bad deb file '%s': no more ar entries, wanted control.tar*\n",
-            filename);
-    }
+        struct archive_entry *ent;
+        if (archive_read_next_header(ar, &ent))
+        {
+            ERR("bad deb file '%s': no more ar entries, wanted control.tar*\n",
+                filename);
+        }
 
-    const char *ent_name = archive_entry_pathname(ent);
-    if  (!ent_name || strncmp(ent_name, "control.tar", 11))
-    {
-        ERR("bad deb file '%s': wanted control.tar*, got '%s'\n",
-            filename, ent_name);
+        const char *ent_name = archive_entry_pathname(ent);
+        if  (!ent_name || strncmp(ent_name, "control.tar", 11))
+        {
+            ERR("bad deb file '%s': wanted control.tar*, got '%s'\n",
+                filename, ent_name);
+        }
     }
 
     read_control_inner();
@@ -143,18 +163,21 @@ void deb::read_control()
 
 void deb::read_data()
 {
-    struct archive_entry *ent;
-    if (archive_read_next_header(ar, &ent))
+    if (ar)
     {
-        ERR("bad deb file '%s': no more ar entries, wanted data.tar*\n",
-            filename);
-    }
+        struct archive_entry *ent;
+        if (archive_read_next_header(ar, &ent))
+        {
+            ERR("bad deb file '%s': no more ar entries, wanted data.tar*\n",
+                filename);
+        }
 
-    const char *ent_name = archive_entry_pathname(ent);
-    if  (!ent_name || strncmp(ent_name, "data.tar", 8))
-    {
-        ERR("bad deb file '%s': wanted data.tar*, got '%s'\n",
-            filename, ent_name);
+        const char *ent_name = archive_entry_pathname(ent);
+        if  (!ent_name || strncmp(ent_name, "data.tar", 8))
+        {
+            ERR("bad deb file '%s': wanted data.tar*, got '%s'\n",
+                filename, ent_name);
+        }
     }
 
     read_data_inner();
@@ -223,7 +246,8 @@ void deb::read_control_inner()
     archive_read_support_filter_zstd(ac);
     archive_read_support_format_tar(ac);
 
-    if (archive_read_open(ac, this, 0, deb_ar_comp_read, 0))
+    if (ar? archive_read_open(ac, this, 0, deb_ar_comp_read, 0)
+          : archive_read_open_memory(ac, c_mem, d_mem-c_mem))
     {
         ERR("can't open deb control: '%s': %s\n", filename,
             archive_error_string(ac));
@@ -275,7 +299,8 @@ void deb::read_data_inner()
         |ARCHIVE_EXTRACT_CLEAR_NOCHANGE_FFLAGS
         |ARCHIVE_EXTRACT_SECURE_SYMLINKS);
 
-    if (archive_read_open(ac, this, 0, deb_ar_comp_read, 0))
+    if (ar? archive_read_open(ac, this, 0, deb_ar_comp_read, 0)
+          : archive_read_open_memory(ac, d_mem, len-(d_mem-ar_mem)))
         ERR("can't open deb data: '%s': %s\n", filename, archive_error_string(ac));
 
     struct archive_entry *ent;
@@ -314,7 +339,8 @@ void deb::read_data_inner()
 void deb::unpack()
 {
     open_file();
-    check_deb_binary();
+    if (ar)
+        check_deb_binary();
     read_control();
     read_data();
 }

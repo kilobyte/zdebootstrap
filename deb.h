@@ -27,7 +27,7 @@ struct deb
     struct archive *ar; // ar
     struct archive *ac; // control.tar.gz, data.tar.gz
     struct archive *aw; // file being extracted
-    void* ar_mem;
+    char *ar_mem, *c_mem, *d_mem;
     size_t len;
 
     plf::colony<std::string> contents;

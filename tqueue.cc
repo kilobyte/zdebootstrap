@@ -1,4 +1,5 @@
 #include "tqueue.h"
+#include "nproc.h"
 #include "zdebootstrap.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -9,7 +10,7 @@ tqueue::tqueue(tworker_t *w, int nthreads): worker(w), idle(0), done(0)
     pthread_mutex_init(&mut, nullptr);
     pthread_cond_init(&moar, nullptr);
 
-    unspawned = nthreads? nthreads : sysconf(_SC_NPROCESSORS_CONF);
+    unspawned = nthreads? nthreads : get_nproc();
     slaves.reserve(unspawned);
 }
 

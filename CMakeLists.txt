@@ -35,15 +35,16 @@ add_cxx_flag(-Wextra)
 add_cxx_flag(-Wno-parentheses)
 add_cxx_flag(-Wno-missing-field-initializers)
 
-set(SOURCES
+add_library(COMMON OBJECT
 	${CMAKE_SOURCE_DIR}/deb.cc
 	${CMAKE_SOURCE_DIR}/822.cc
 	${CMAKE_SOURCE_DIR}/tqueue.cc
 	${CMAKE_SOURCE_DIR}/util.cc
 	${CMAKE_SOURCE_DIR}/nproc.cc
 	${CMAKE_SOURCE_DIR}/globals.cc)
+list(APPEND LIBS COMMON)
 
-add_executable(zunpack zunpack.cc ${SOURCES})
+add_executable(zunpack zunpack.cc)
 target_link_libraries(zunpack ${LIBS})
 
 enable_testing()

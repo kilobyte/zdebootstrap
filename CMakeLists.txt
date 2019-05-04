@@ -31,7 +31,9 @@ macro(add_cxx_flag flag)
 endmacro()
 
 add_cxx_flag(-Wall)
+add_cxx_flag(-Wextra)
 add_cxx_flag(-Wno-parentheses)
+add_cxx_flag(-Wno-missing-field-initializers)
 
 set(SOURCES
 	${CMAKE_SOURCE_DIR}/deb.cc

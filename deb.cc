@@ -210,7 +210,7 @@ void deb::slurp_control_file()
     la_ssize_t len;
     std::string txt;
 
-    while ((len = archive_read_data(ac, buf, len)) > 0)
+    while ((len = archive_read_data(ac, buf, sizeof(buf))) > 0)
         txt.append(buf, len);
     if (len < 0)
         ERR("%s\n", archive_error_string(ac));

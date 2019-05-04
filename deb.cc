@@ -182,6 +182,7 @@ void deb::read_data()
 
     read_data_inner();
     write_list();
+    write_info();
 }
 
 void deb::write_list()
@@ -194,6 +195,23 @@ void deb::write_list()
     for (auto ci = contents.cbegin(); ci != contents.cend(); ++ci)
         fprintf(f, "%s\n", ci->c_str());
     fclose(f);
+}
+
+void deb::write_info()
+{
+    for (auto fi = info.cbegin(); fi != info.cend(); ++fi)
+    {
+        const control_info& i(*fi);
+        int f = open(("var/lib/dpkg/info/" + basename + "." + i.filename).c_str(),
+            O_CREAT|O_TRUNC|O_WRONLY|O_CLOEXEC|O_NOFOLLOW, i.x? 0777 : 0666);
+        if (f==-1
+            || write(f, &i.contents[0], i.contents.size()) != (ssize_t)i.contents.size()
+            || close(f))
+        {
+            ERR("can't write to 'var/lib/dpkg/info/%s.%s: %m\n",
+                basename.c_str(), i.filename.c_str());
+        }
+    }
 }
 
 deb::~deb()
@@ -216,6 +234,20 @@ void deb::slurp_control_file()
         ERR("%s\n", archive_error_string(ac));
 
     control.parse(txt.c_str());
+}
+
+void deb::slurp_control_info(const char *name, bool x)
+{
+    char buf[4096];
+    la_ssize_t len;
+    std::string txt;
+
+    while ((len = archive_read_data(ac, buf, sizeof(buf))) > 0)
+        txt.append(buf, len);
+    if (len < 0)
+        ERR("%s\n", archive_error_string(ac));
+
+    info.emplace(name, x, txt);
 }
 
 la_ssize_t deb_ar_comp_read(struct archive *arc, void *c_data, const void **buf)
@@ -260,8 +292,14 @@ void deb::read_control_inner()
         const char *cf = archive_entry_pathname(ent);
         if (!strcmp(cf, "./control"))
             slurp_control_file();
+        else if (strncmp(cf, "./", 2))
+            ERR("deb control filename in '%s' doesn't start with './': '%s'\n", filename, cf);
+        else if (!cf[2])
+            /* top-level dir */;
+        else if (!is_valid_name(cf+2))
+            ERR("bad deb control filename in '%s': '%s'\n", filename, cf+2);
         else
-            archive_read_data_skip(ac);
+            slurp_control_info(cf+2, archive_entry_perm(ent)&0111);
     }
 
     if (err != ARCHIVE_EOF)

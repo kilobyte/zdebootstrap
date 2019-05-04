@@ -5,6 +5,15 @@
 #include <string>
 #include "822.h"
 
+struct control_info
+{
+    control_info(std::string _filename, bool _x, std::string _contents) :
+        filename(_filename), x(_x), contents(_contents) {};
+    std::string filename;
+    bool x;
+    std::string contents;
+};
+
 struct deb
 {
     deb(const char *filename);
@@ -16,9 +25,11 @@ struct deb
     void read_control();
     void read_control_inner();
     void slurp_control_file();
+    void slurp_control_info(const char *name, bool x);
     void read_data();
     void read_data_inner();
     void write_list();
+    void write_info();
     const std::string& field(const std::string& name);
     const std::string& field(const std::string& name, const std::string& none);
 
@@ -32,4 +43,5 @@ struct deb
 
     plf::colony<std::string> contents;
     deb822 control;
+    plf::colony<control_info> info;
 };

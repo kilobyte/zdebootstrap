@@ -16,6 +16,23 @@ if(NUMA)
 	list(APPEND LIBS numa)
 endif()
 
+include(CheckCXXCompilerFlag)
+macro(add_cxx_flag flag)
+	string(REPLACE - _ flag2 ${flag})
+	string(REPLACE " " _ flag2 ${flag2})
+	string(REPLACE = "_" flag2 ${flag2})
+	set(check_name "CXX_HAS_${flag2}")
+
+	check_cxx_compiler_flag("${flag}" "${check_name}")
+
+	if (${${check_name}})
+		set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flag}")
+	endif()
+endmacro()
+
+add_cxx_flag(-Wall)
+add_cxx_flag(-Wno-parentheses)
+
 set(SOURCES
 	${CMAKE_SOURCE_DIR}/deb.cc
 	${CMAKE_SOURCE_DIR}/822.cc

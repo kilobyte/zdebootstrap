@@ -13,4 +13,4 @@ endfunction()
 test_prog(noar)
 
 build_test(re822)
-add_test(822 ./runtests ./re822 ./822)
+add_test(822 ${CMAKE_CURRENT_SOURCE_DIR}/runtests ./re822 ${CMAKE_CURRENT_SOURCE_DIR}/822)

@@ -18,7 +18,7 @@ static void get_entry(std::map<std::string, std::string> &par, const char *&in)
     if (nameB==in || *in!=':')
     {
         ERR("not a valid name:value in deb822: '%.*s'\n",
-            strchrnul(nameB, '\n')-nameB, nameB);
+            (int)(strchrnul(nameB, '\n')-nameB), nameB);
     }
 
     const char *nameE = in++;

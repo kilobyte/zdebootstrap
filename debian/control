@@ -1,0 +1,23 @@
+Source: zdebootstrap
+Priority: optional
+Maintainer: Adam Borowski <kilobyte@angband.pl>
+Build-Depends:
+	cmake,
+	debhelper-compat (=12),
+	libarchive-dev,
+	libnuma-dev [linux-any],
+	libplf-colony-dev,
+	libipc-system-simple-perl,
+	zstd,
+Standards-Version: 4.3.0
+Section: admin
+#Homepage: 💩
+#Vcs-Browser: 💩
+#Vcs-Git: 💩
+
+Package: zdebootstrap
+Architecture: any
+Multi-Arch: foreign
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: install a Debian system
+ 👹

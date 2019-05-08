@@ -54,3 +54,6 @@ target_link_libraries(zdebootstrap ${LIBS})
 
 enable_testing()
 add_subdirectory(tests)
+
+install(TARGETS zunpack zdebootstrap
+	RUNTIME DESTINATION bin)

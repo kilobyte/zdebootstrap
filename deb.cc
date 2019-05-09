@@ -204,7 +204,7 @@ void deb::write_info()
         const control_info& i(*fi);
         struct timespec t[2]={{0,UTIME_OMIT}, i.mtime};
         int f = open(("var/lib/dpkg/info/" + basename + "." + i.filename).c_str(),
-            O_CREAT|O_TRUNC|O_WRONLY|O_CLOEXEC|O_NOFOLLOW, i.x? 0777 : 0666);
+            O_CREAT|O_TRUNC|O_WRONLY|O_CLOEXEC|O_NOFOLLOW, i.x? 0755 : 0644);
         if (f==-1
             || write(f, &i.contents[0], i.contents.size()) != (ssize_t)i.contents.size()
             || futimens(f, t)

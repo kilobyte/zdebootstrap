@@ -7,10 +7,12 @@
 
 struct control_info
 {
-    control_info(std::string _filename, bool _x, std::string _contents) :
-        filename(_filename), x(_x), contents(_contents) {};
+    control_info(std::string _filename, bool _x, time_t sec, long nsec,
+        std::string _contents) :
+        filename(_filename), x(_x), mtime({sec, nsec}), contents(_contents) {};
     std::string filename;
     bool x;
+    struct timespec mtime;
     std::string contents;
 };
 
@@ -25,7 +27,7 @@ struct deb
     void read_control();
     void read_control_inner();
     void slurp_control_file();
-    void slurp_control_info(const char *name, bool x);
+    void slurp_control_info(const char *name, bool x, time_t sec, long nsec);
     void read_data();
     void read_data_inner();
     void write_list();

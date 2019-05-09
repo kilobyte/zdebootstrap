@@ -94,7 +94,7 @@ static bool is_valid_name(const char *s)
         return false;
 
     for (s++; *s; s++)
-        if (*s!='-' && *s!='.' && *s<'0' || *s>'9' && *s<'a' || *s>'z')
+        if (*s!='+' && *s!='-' && *s!='.' && *s<'0' || *s>'9' && *s<'a' || *s>'z')
             return false;
 
     return true;

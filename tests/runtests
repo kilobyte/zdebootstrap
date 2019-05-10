@@ -23,6 +23,16 @@ for T in "$1/"*.in
     T="${T%.in}"
     echo "$T"
     $prog <"$T".in >test-out.$$ 2>test-err.$$
+    ret=$?
+    if [ -e "$T.err" -a "$ret" -eq 0 ]
+      then
+        echo "Unexpected successful exit code."
+        err=1
+    elif [ ! -e "$T.err" -a "$ret" -ne 0 ]
+      then
+        echo "Unexpected fail: $ret"
+        err=1
+    fi
     fcmp out
     fcmp err
   done

@@ -1,0 +1,3 @@
+#!/usr/bin/perl -n
+
+$_ eq "meow\n" or (print STDERR "error message\n"), exit 42

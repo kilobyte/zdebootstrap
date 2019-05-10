@@ -10,6 +10,8 @@ function(test_prog name)
 	add_test(${name} ${name})
 endfunction()
 
+add_test(harness ${CMAKE_CURRENT_SOURCE_DIR}/runtests ./harness/strcmp ${CMAKE_CURRENT_SOURCE_DIR}/harness)
+
 test_prog(noar)
 
 build_test(re822)

@@ -1,4 +1,5 @@
 set(CTEST_OUTPUT_ON_FAILURE ON)
+set(TD ${CMAKE_CURRENT_SOURCE_DIR})
 
 function(build_test name)
 	add_executable(${name} ${name}.cc)
@@ -10,9 +11,9 @@ function(test_prog name)
 	add_test(${name} ${name})
 endfunction()
 
-add_test(harness ${CMAKE_CURRENT_SOURCE_DIR}/runtests ./harness/strcmp ${CMAKE_CURRENT_SOURCE_DIR}/harness)
+add_test(harness ${TD}/runtests ./harness/strcmp ${TD}/harness)
 
 test_prog(noar)
 
 build_test(re822)
-add_test(822 ${CMAKE_CURRENT_SOURCE_DIR}/runtests ./re822 ${CMAKE_CURRENT_SOURCE_DIR}/822)
+add_test(822 ${TD}/runtests ./re822 ${TD}/822)

@@ -1,0 +1,9 @@
+#!/usr/bin/perl -w
+use File::Temp qw(tempdir);
+
+!$#ARGV or die "Usage: unp_deb foo.deb\n";
+my ($deb) = @ARGV;
+
+my $dir = tempdir(CLEANUP => 1);
+system("../zunpack", "-t", $dir, $deb) && exit 1;
+system("find \"$dir\" -printf '%P\n'|sort");

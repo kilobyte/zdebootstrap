@@ -31,7 +31,7 @@ void deb::open_file()
         ERR("empty deb file: '%s'\n", filename);
     if (len < 256)
         ERR("implausible small deb file: '%s'\n", filename);
-    printf("opening %s (size %zu)\n", filename, len);
+    //printf("opening %s (size %zu)\n", filename, len);
 
     ar_mem = (char*)mmap(0, len, PROT_READ, MAP_SHARED, fd, 0);
     if (ar_mem == MAP_FAILED)

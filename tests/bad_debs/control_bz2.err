@@ -1,1 +1,1 @@
-implausible small deb file: 'control_bz2.deb'
+can't open deb control: 'control_bz2.deb': Unrecognized archive format

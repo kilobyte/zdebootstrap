@@ -3,3 +3,4 @@
 
 const char *target;
 int orig_wd;
+int verbose;

@@ -31,7 +31,8 @@ void deb::open_file()
         ERR("empty deb file: '%s'\n", filename);
     if (len < 256)
         ERR("implausible small deb file: '%s'\n", filename);
-    //printf("opening %s (size %zu)\n", filename, len);
+    if (verbose >= 1)
+        printf("opening %s (size %zu)\n", filename, len);
 
     ar_mem = (char*)mmap(0, len, PROT_READ, MAP_SHARED, fd, 0);
     if (ar_mem == MAP_FAILED)
@@ -158,7 +159,8 @@ void deb::read_control()
     else
         basename = package;
 
-    printf("%s\n", basename.c_str());
+    if (verbose >= 0)
+        printf("%s\n", basename.c_str());
 }
 
 void deb::read_data()

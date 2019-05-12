@@ -31,16 +31,19 @@ int main(int argc, char **argv)
         ERR("can't open current working directory\n");
 
     target = "target";
+    verbose = 0;
 
     static struct option options[] =
     {
         { "target",	1, 0, 't' },
+        { "verbose",	0, 0, 'v' },
+        { "quiet",	0, 0, 'q' },
         {0}
     };
 
     unsigned nthreads=0;
     int opt;
-    while ((opt = getopt_long(argc, argv, "t:j:", options, 0)) != -1)
+    while ((opt = getopt_long(argc, argv, "t:j:vq", options, 0)) != -1)
     {
         switch (opt)
         {
@@ -52,6 +55,12 @@ int main(int argc, char **argv)
             break;
         case 't':
             target = optarg;
+            break;
+        case 'v':
+            verbose++;
+            break;
+        case 'q':
+            verbose--;
             break;
         default:
             exit(1);

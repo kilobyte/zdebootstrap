@@ -187,8 +187,6 @@ void deb::read_data()
 
 void deb::write_list()
 {
-    mkdir_p("var/lib/dpkg/info");
-
     FILE *f = fopen(("var/lib/dpkg/info/" + basename + ".list").c_str(), "we");
     if (!f)
         ERR("can't write to 'var/lib/dpkg/info/%s.list\n", basename.c_str());

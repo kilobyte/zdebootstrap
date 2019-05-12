@@ -38,6 +38,7 @@ add_cxx_flag(-Wno-missing-field-initializers)
 add_library(COMMON OBJECT
 	${CMAKE_SOURCE_DIR}/deb.cc
 	${CMAKE_SOURCE_DIR}/822.cc
+	${CMAKE_SOURCE_DIR}/status.cc
 	${CMAKE_SOURCE_DIR}/tqueue.cc
 	${CMAKE_SOURCE_DIR}/util.cc
 	${CMAKE_SOURCE_DIR}/nproc.cc

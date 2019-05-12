@@ -8,6 +8,7 @@
 #include "deb.h"
 #include "util.h"
 #include "tqueue.h"
+#include "status.h"
 #include "zdebootstrap.h"
 
 static void unpack_thread(const char* arg)
@@ -80,6 +81,8 @@ int main(int argc, char **argv)
     tqueue slaves(unpack_thread, nthreads);
     for (int i=optind; i<argc; i++)
         slaves.put(argv[i]);
+    slaves.finish();
+    status_write();
 
     return 0;
 }

@@ -9,8 +9,8 @@ struct tqueue
     tqueue(tworker_t *worker, int nthreads);
     ~tqueue(void);
     void put(const char *item, bool spawn=true);
-    void finish(void) { done=1; wakeall(); }
-    //void halt(void) { done=2; wakeall(); }
+    void finish(void) { done=1; wakeall(); kill_slaves(); }
+    //void halt(void) { done=2; wakeall(); kill_slaves(); }
     void slave(void);
 private:
     void wakeall(void);

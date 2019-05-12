@@ -10,6 +10,7 @@
 #include "zdebootstrap.h"
 #include "deb.h"
 #include "util.h"
+#include "status.h"
 
 deb::deb(const char *fn) : filename(fn), ar(0), ar_mem(0)
 {
@@ -386,4 +387,6 @@ void deb::unpack()
         check_deb_binary();
     read_control();
     read_data();
+    (*control.contents.begin())["Status"]="install ok unpacked";
+    status_add(std::move(*control.contents.begin()));
 }

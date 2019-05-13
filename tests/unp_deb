@@ -5,5 +5,5 @@ use File::Temp qw(tempdir);
 my ($deb) = @ARGV;
 
 my $dir = tempdir(CLEANUP => 1);
-system("../zunpack", "-t", $dir, $deb) && exit 1;
+system("../zunpack", "-t", $dir, "-q", $deb) && exit 1;
 system("find \"$dir\" -printf '%P\n'|sort");

@@ -1,1 +1,1 @@
-can't open deb control: 'only_control.deb': Unrecognized archive format
+bad deb file 'only_control.deb': no more ar entries, wanted data.tar*

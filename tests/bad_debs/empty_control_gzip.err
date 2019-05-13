@@ -1,1 +1,1 @@
-implausible small deb file: 'empty_control_gzip.deb'
+can't open deb control: 'empty_control_gzip.deb': Unrecognized archive format

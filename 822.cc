@@ -63,7 +63,7 @@ void deb822::parse(const char *in)
         {
             in++;
             if (!par.empty())
-                contents.push_back(par);
+                contents.insert(par);
             par.clear();
         }
         else
@@ -71,7 +71,7 @@ void deb822::parse(const char *in)
     }
 
     if (!par.empty())
-        contents.push_back(par);
+        contents.insert(par);
 }
 
 static void print_del(std::map<std::string, std::string> &par, const std::string &k)

@@ -1,11 +1,11 @@
 #include <map>
 #include <string>
-#include <vector>
+#include <plf_colony.h>
 
 struct deb822
 {
     void parse(const char *in);
     void fprint(FILE *f);
 
-    std::vector<std::map<std::string, std::string>> contents;
+    plf::colony<std::map<std::string, std::string>> contents;
 };

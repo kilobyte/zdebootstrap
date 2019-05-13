@@ -104,8 +104,8 @@ static bool is_valid_name(const char *s)
 const std::string& deb::field(const std::string& name)
 {
     // Already checked there's exactly one paragraph.
-    const auto f = control.contents[0].find(name);
-    if (f == control.contents[0].cend())
+    const auto f = control.contents.cbegin()->find(name);
+    if (f == control.contents.cbegin()->cend())
         ERR("deb '%s': field '%s' missing\n", filename, name.c_str());
     return f->second;
 }
@@ -113,8 +113,8 @@ const std::string& deb::field(const std::string& name)
 const std::string& deb::field(const std::string& name, const std::string& none)
 {
     // Already checked there's exactly one paragraph.
-    const auto f = control.contents[0].find(name);
-    if (f == control.contents[0].cend())
+    const auto f = control.contents.cbegin()->find(name);
+    if (f == control.contents.cbegin()->cend())
         return none;
     return f->second;
 }

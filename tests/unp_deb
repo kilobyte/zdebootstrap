@@ -1,8 +1,16 @@
 #!/usr/bin/perl -w
-use File::Temp qw(tempdir);
+use File::Temp qw(tempfile tempdir);
 
 !$#ARGV or die "Usage: unp_deb foo.deb\n";
 my ($deb) = @ARGV;
+
+if ($deb eq "-")
+{
+    (my $D, $deb) = tempfile(UNLINK => 1);
+    my $me=$0;
+    $me=~s:[^/]*$::;
+    system("${me}mk-deb >$deb");
+}
 
 my $dir = tempdir(CLEANUP => 1);
 system("../zunpack", "-t", $dir, "-q", $deb) && exit 1;

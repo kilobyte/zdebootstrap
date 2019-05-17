@@ -1,0 +1,70 @@
+#!/usr/bin/perl -w
+use autodie qw(:all);
+use File::Temp qw(tempdir);
+
+my $format;
+my $cz='gz';
+my $dz='gz';
+my $control;
+my @data;
+
+while (<STDIN>)
+{
+    /^Format: 2(?:|\.0)$/? $format=2
+    :/^Format: 0\.93(?:|9|9000)$/? $format=1
+    :/^CZ: (.*)/? $cz=$1
+    :/^DZ: (.*)/? $dz=$1
+    :die "Bad line: '$_'\n";
+}
+
+$format or die "No format given.\n";
+
+defined $control or $control=<<'EOF';
+Package: dupa
+Version: 0
+Architecture: zx-spectrum
+Maintainer: Julius Caesar <imperator@spqr.it>
+Description: etaoin shrdlu
+ Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+ tempor incididunt ut labore et dolore magna aliqua.  Ut enim ad minim
+ veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea
+ commodo consequat.  Duis aute irure dolor in reprehenderit in voluptate
+ velit esse cillum dolore eu fugiat nulla pariatur.  Excepteur sint
+ occaecat cupidatat non proident, sunt in culpa qui officia deserunt
+ mollit anim id est laborum.
+EOF
+@data or @data=qw(usr/share/doc/dupa/README);
+
+my %comp=("gz"=>"gzip -9", "xz"=>"xz", "bz2"=>"bzip2", "zst"=>"zstd");
+
+my $cdir=tempdir(CLEANUP=>1);
+my $wdir=tempdir(CLEANUP=>1);
+
+open F, '>', "$cdir/control";
+print F $control;
+close F;
+
+system 'tar', 'cf', "$wdir/control.tar", '-C', $cdir, './control';
+$comp{$cz} && system "$comp{$cz} $wdir/control.tar";
+
+system 'tar', 'cf', "$wdir/data.tar", '-C', 'deb-data', map("./$_", @data);
+$comp{$dz} && system"$comp{$dz} $wdir/data.tar" ;
+
+$cz and $cz=".$cz";
+$dz and $dz=".$dz";
+
+if ($format==1)
+{
+    printf "0.939000\n%u\n", (stat "$wdir/control.tar$cz")[7];
+    system "cat", "$wdir/control.tar$cz";
+    system "cat", "$wdir/data.tar$dz";
+}
+else
+{
+    chdir $wdir;
+    open F, '>', "debian-binary";
+    print F "2.0\n";
+    close F;
+    `ar q x debian-binary control.tar$cz data.tar$dz 2>&1`;
+    system "cat", "x";
+}

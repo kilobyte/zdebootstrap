@@ -35,7 +35,8 @@ Description: etaoin shrdlu
 EOF
 @data or @data=qw(usr/share/doc/dupa/README);
 
-my %comp=("gz"=>"gzip -9", "xz"=>"xz", "bz2"=>"bzip2", "zst"=>"zstd");
+my %comp=("gz"=>"gzip -9", "xz"=>"xz", "bz2"=>"bzip2",
+    "lzma"=>"xz --format=lzma", "zst"=>"zstd -q");
 
 my $cdir=tempdir(CLEANUP=>1);
 my $wdir=tempdir(CLEANUP=>1);

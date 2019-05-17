@@ -38,6 +38,9 @@ EOF
 my %comp=("gz"=>"gzip -9", "xz"=>"xz", "bz2"=>"bzip2",
     "lzma"=>"xz --format=lzma", "zst"=>"zstd -q");
 
+my $tsrcdir=$0;
+$tsrcdir=~s:[^/]*$::;
+
 my $cdir=tempdir(CLEANUP=>1);
 my $wdir=tempdir(CLEANUP=>1);
 
@@ -48,7 +51,7 @@ close F;
 system 'tar', 'cf', "$wdir/control.tar", '-C', $cdir, './control';
 $comp{$cz} && system "$comp{$cz} $wdir/control.tar";
 
-system 'tar', 'cf', "$wdir/data.tar", '-C', 'deb-data', map("./$_", @data);
+system 'tar', 'cf', "$wdir/data.tar", '-C', "${tsrcdir}deb-data", map("./$_", @data);
 $comp{$dz} && system"$comp{$dz} $wdir/data.tar" ;
 
 $cz and $cz=".$cz";

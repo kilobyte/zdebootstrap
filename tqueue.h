@@ -15,6 +15,7 @@ struct tqueue
 private:
     void wakeall(void);
     void kill_slaves(void);
+    void saytime(const char *state, const char *task);
     std::queue<char *> q;
     plf::colony<pthread_t> slaves;
     tworker_t *worker;

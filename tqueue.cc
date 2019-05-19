@@ -4,6 +4,17 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+
+static int64_t time0 = 0;
+#define NANO 1000000000
+
+static int64_t getticks(void)
+{
+    struct timespec tv;
+    clock_gettime(CLOCK_MONOTONIC, &tv);
+    return tv.tv_sec * NANO + tv.tv_nsec;
+}
 
 tqueue::tqueue(tworker_t *w, int nthreads): worker(w), idle(0), done(0)
 {
@@ -12,6 +23,9 @@ tqueue::tqueue(tworker_t *w, int nthreads): worker(w), idle(0), done(0)
 
     unspawned = nthreads? nthreads : get_nproc();
     slaves.reserve(unspawned);
+
+    if (!time0)
+        time0 = getticks();
 }
 
 tqueue::~tqueue(void)
@@ -29,6 +43,14 @@ tqueue::~tqueue(void)
     }
 }
 
+void tqueue::saytime(const char *state, const char *task)
+{
+    if (verbose < 2)
+        return;
+    int64_t t=getticks() - time0;
+    printf("%4d.%06d %s %s\n", (int)(t/NANO), (int)(t%NANO/1000), state, task);
+}
+
 static void* slaveth(void *arg)
 {
     ((tqueue *)arg)->slave();
@@ -44,7 +66,9 @@ void tqueue::slave(void)
         q.pop();
         pthread_mutex_unlock(&mut);
 
+        saytime("⇒", task);
         worker(task);
+        saytime("✓", task);
         free(task);
 
         pthread_mutex_lock(&mut);

@@ -79,6 +79,12 @@ int main(int argc, char **argv)
     if (mkdir_p("var/lib/dpkg/info"))
         ERR("can't mkdir -p 'var/lib/dpkg/info': %m\n");
 
+    plf::colony<const char *> goals;
+    for (int i=optind; i<argc; i++)
+        goals.insert(argv[i]);
+    apt_sim(goals);
+    return 0;
+
     tqueue slaves(unpack_thread, nthreads);
     for (int i=optind; i<argc; i++)
         slaves.put(argv[i]);

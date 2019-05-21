@@ -40,6 +40,7 @@ add_library(COMMON OBJECT
 	${CMAKE_SOURCE_DIR}/822.cc
 	${CMAKE_SOURCE_DIR}/status.cc
 	${CMAKE_SOURCE_DIR}/tqueue.cc
+	${CMAKE_SOURCE_DIR}/apt.cc
 	${CMAKE_SOURCE_DIR}/util.cc
 	${CMAKE_SOURCE_DIR}/nproc.cc
 	${CMAKE_SOURCE_DIR}/globals.cc)
@@ -47,6 +48,9 @@ list(APPEND LIBS COMMON)
 
 add_executable(zunpack zunpack.cc)
 target_link_libraries(zunpack ${LIBS})
+
+add_executable(zdebootstrap zdebootstrap.cc)
+target_link_libraries(zdebootstrap ${LIBS})
 
 enable_testing()
 add_subdirectory(tests)

@@ -56,7 +56,7 @@ static int spawn(int *outfd, char *const *argv)
     return pid;
 }
 
-void apt_sim(const plf::colony<const char*> &goals)
+plf::colony<std::string> apt_sim(const plf::colony<const char*> &goals)
 {
     const char *args[goals.size()+4];
     int i=0;
@@ -69,6 +69,8 @@ void apt_sim(const plf::colony<const char*> &goals)
 
     int aptfd;
     int pid=spawn(&aptfd, (char*const*)args);
+
+    plf::colony<std::string> pav;
 
     FILE *f=fdopen(aptfd, "r");
     char line[256];
@@ -98,7 +100,7 @@ void apt_sim(const plf::colony<const char*> &goals)
         GET(']'); GET(')'); GET('\n'); GET(0);
 
         *p=*v=*a=0;
-        printf("[%s] [%s] [%s]\n", pkg, ver, arch);
+        pav.emplace(line, sprintf(line, "%s:%s=%s", pkg, arch, ver));
     }
 
     fclose(f);
@@ -107,4 +109,61 @@ void apt_sim(const plf::colony<const char*> &goals)
         ERR("wait failed: %m\n");
     if (status)
         ERR("apt failed\n");
+
+    return pav;
+}
+
+static bool opstat(int dir, size_t len, const char *name, int *fd)
+{
+    struct stat st;
+    int f;
+
+    if (!fd)
+    {
+        if (fstatat(dir, name, &st, 0))
+            return false;
+    }
+    else
+    {
+        f=openat(dir, name, O_RDONLY|O_CLOEXEC);
+        if (f==-1)
+            return false;
+        if (fstat(f, &st))
+            return close(f), false;
+    }
+
+    if (!S_ISREG(st.st_mode) || len && (size_t)st.st_size!=len)
+        return (fd?close(f):0), false;
+    if (fd)
+        *fd=f;
+    return true;
+}
+
+bool find_deb(int dir, size_t len, const char *pav, int *fd)
+{
+    const char *colon = strchrnul(pav, ':');
+    const char *equal = strchrnul(colon, '=');
+    int plen = colon-pav;
+    int alen = equal-colon-1;
+    if (alen<=0 || !*equal || !*++equal)
+        return false;
+    colon++;
+
+    char name[256];
+    #define TRY if (opstat(dir, len, name, fd)) return true
+    // First, try unmangled name.
+    sprintf(name, "%.*s_%s_%.*s.deb", plen, pav, equal, alen, colon);
+    TRY;
+    const char *epoch = strchr(equal, ':');
+    if (!epoch || epoch==equal)
+        return false;
+    // Then, epoch with : mangled to %3a.
+    sprintf(name, "%.*s_%.*s%%3a%s_%.*s.deb", plen, pav, (int)(epoch-equal), equal,
+        epoch+1, alen, colon);
+    TRY;
+    // Then, with epoch elided.
+    sprintf(name, "%.*s_%s_%.*s.deb", plen, pav, epoch+1, alen, colon);
+    TRY;
+    #undef TRY
+    return false;
 }

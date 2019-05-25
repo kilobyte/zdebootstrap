@@ -82,7 +82,9 @@ int main(int argc, char **argv)
     plf::colony<const char *> goals;
     for (int i=optind; i<argc; i++)
         goals.insert(argv[i]);
-    apt_sim(goals);
+    plf::colony<std::string> packages = apt_sim(goals);
+    for (auto c=packages.cbegin(); c!=packages.cend(); ++c)
+        printf("%s: %s\n", c->c_str(), find_deb(orig_wd, 0, c->c_str(), nullptr)?"✓":"✗");
     return 0;
 
     tqueue slaves(unpack_thread, nthreads);

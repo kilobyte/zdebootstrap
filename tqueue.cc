@@ -1,5 +1,6 @@
 #include "tqueue.h"
 #include "nproc.h"
+#include "util.h"
 #include "zdebootstrap.h"
 #include <unistd.h>
 #include <stdlib.h>
@@ -69,9 +70,10 @@ void tqueue::slave(void)
         saytime("⇒", task);
         worker(task);
         saytime("✓", task);
-        free(task);
 
         pthread_mutex_lock(&mut);
+        task_done(task);
+        free(task);
 
         while (q.empty())
         {
@@ -118,4 +120,44 @@ void tqueue::kill_slaves(void)
 {
     for (auto c = slaves.begin(); c!=slaves.end(); c=slaves.erase(c))
         pthread_join(*c, nullptr);
+}
+
+/****************************************************************************/
+
+// This can't currently handle all reqs for b being already met.
+void tqueue::req(std::string a, std::string b)
+{
+    if (tasks_done.count(a))
+        return;
+    reqs[b].emplace(a);
+    want[a].emplace(b);
+}
+
+void tqueue::task_done(std::string task)
+{
+#ifndef NDEBUG
+    if (tasks_done.count(task))
+        ERR("Task “%s” finished twice!\n", task.c_str());
+#endif
+    tasks_done.insert(task);
+
+    auto aw = want.find(task);
+    if (aw == want.end())
+        return;
+    // Tell everyone who waits for us.
+    for (auto c = aw->second.cbegin(); c!=aw->second.cend(); ++c)
+    {
+        auto r = reqs.find(*c);
+        if (r == reqs.end())
+            continue;
+        r->second.erase(task);
+        if (!r->second.size())
+        {
+            pthread_mutex_unlock(&mut);
+            put(strdupe(*c));
+            pthread_mutex_lock(&mut);
+        }
+    }
+
+    want.erase(aw);
 }

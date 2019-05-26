@@ -1,5 +1,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <string.h>
 #include <string>
 
 #include "zdebootstrap.h"
@@ -18,4 +19,15 @@ int mkdir_p(const char *path)
         return -1;
 
     return 0;
+}
+
+char *strdupe(const std::string &s)
+{
+    size_t len = s.length();
+    char *t = (char*)malloc(len+1);
+    if (!t)
+        ERR("Out of memory.\n");
+    memcpy(t, s.c_str(), len);
+    t[len]=0;
+    return t;
 }

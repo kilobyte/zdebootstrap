@@ -1,7 +1,7 @@
 multiline1: line0
  line1
  line2
-multiline2: 
+multiline2:
  line1
  line2
 oneline: foo bar

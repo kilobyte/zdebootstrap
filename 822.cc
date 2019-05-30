@@ -76,13 +76,19 @@ void deb822::parse(const char *in)
         contents.insert(par);
 }
 
+static void print_kv(FILE *f, const std::pair<std::string, std::string> &p)
+{
+    const char *val = p.second.c_str();
+    fprintf(f, *val=='\n'? "%s:%s\n":"%s: %s\n", p.first.c_str(), val);
+}
+
 static void print_del(FILE *f, std::map<std::string, std::string> &par, const std::string &k)
 {
     auto it = par.find(k);
     if (it == par.cend())
         return;
 
-    fprintf(f, "%s: %s\n", it->first.c_str(), it->second.c_str());
+    print_kv(f, *it);
     par.erase(it);
 }
 
@@ -133,7 +139,7 @@ void deb822::fprint(FILE *f)
 
         // Place non-standard ones at the end.
         for (auto p=v->cbegin(); p!=v->cend(); ++p)
-            fprintf(f, "%s: %s\n", p->first.c_str(), p->second.c_str());
+            print_kv(f, *p);
     }
 }
 

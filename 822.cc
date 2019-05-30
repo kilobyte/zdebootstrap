@@ -1,5 +1,7 @@
 #include <unistd.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
 
 #include "822.h"
 #include "zdebootstrap.h"
@@ -133,4 +135,37 @@ void deb822::fprint(FILE *f)
         for (auto p=v->cbegin(); p!=v->cend(); ++p)
             fprintf(f, "%s: %s\n", p->first.c_str(), p->second.c_str());
     }
+}
+
+// fd gets closed when finished
+void deb822::parse_file(int fd)
+{
+    struct stat st;
+    char *mem;
+    if (!fstat(fd, &st) && S_ISREG(st.st_mode) && (mem=(char*)mmap(0,
+        st.st_size+1, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0))!=MAP_FAILED)
+    {
+        mem[st.st_mode]=0;
+        parse(mem);
+        munmap(mem, st.st_size+1);
+        close(fd);
+        return;
+    }
+
+    FILE *f=fdopen(fd, "r");
+    if (!f)
+        ERR("fdopen failed: %m\n");
+
+    std::string entry;
+    char line[4096];
+    while (fgets(line, sizeof(line), f))
+    {
+        if (*line)
+            entry+=line;
+        else
+            parse(entry.c_str()),
+            entry.clear();
+    }
+    parse(entry.c_str());
+    fclose(f);
 }

@@ -16,7 +16,8 @@ add_test(harness ${TD}/runtests ${TD}/harness/strcmp ${TD}/harness)
 test_prog(noar)
 
 build_test(re822)
-add_test(822 ${TD}/runtests ./re822 ${TD}/822)
+add_test(822-mmap ${TD}/runtests ./re822 ${TD}/822)
+add_test(822-read ${TD}/runtests ${TD}/cat-re822 ${TD}/822)
 
 add_test(bad_debs ${TD}/runtests ${TD}/unp_deb ${TD}/bad_debs)
 add_test(compress ${TD}/runtests "${TD}/unp_deb -" ${TD}/compress)

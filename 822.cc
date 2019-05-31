@@ -148,8 +148,11 @@ void deb822::parse_file(int fd)
 {
     struct stat st;
     char *mem;
-    if (!fstat(fd, &st) && S_ISREG(st.st_mode) && (mem=(char*)mmap(0,
-        st.st_size+1, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0))!=MAP_FAILED)
+    if (!fstat(fd, &st) && S_ISREG(st.st_mode)
+        && st.st_size&4095 // even MAP_PRIVATE mappings don't provide pages after
+                           // file's length; 4096 is smallest arch page size
+        && (mem=(char*)mmap(0, st.st_size+1, PROT_READ|PROT_WRITE, MAP_PRIVATE,
+        fd, 0))!=MAP_FAILED)
     {
         mem[st.st_mode]=0;
         parse(mem);

@@ -1,5 +1,6 @@
 #include "zdebootstrap.h"
 #include "apt.h"
+#include "822.h"
 #include <unistd.h>
 #include <stdlib.h>
 #include <spawn.h>
@@ -8,10 +9,14 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <wait.h>
+#include <unordered_map>
+#include <map>
 
 extern char **environ;
 
 static int devnull;
+
+static std::unordered_map<std::string, par822> avail;
 
 static int spawn(int *outfd, char *const *argv)
 {
@@ -166,4 +171,45 @@ bool find_deb(int dir, size_t len, const char *pav, int *fd)
     TRY;
     #undef TRY
     return false;
+}
+
+static std::string pav822(par822 &p)
+{
+    const std::string& pkg(field822(p, "Package", ""));
+    if (pkg.empty())
+        ERR("paragraph with no Package in apt-avail\n");
+    const std::string& ver(field822(p, "Version", ""));
+    if (ver.empty())
+        ERR("paragraph with no Version in apt-avail\n");
+    const std::string& arch(field822(p, "Architecture", ""));
+    if (arch.empty())
+        ERR("paragraph with no Version in apt-avail\n");
+
+    char buf[256];
+    return std::string(buf, snprintf(buf, 256, "%s:%s=%s", pkg.c_str(),
+        arch.c_str(), ver.c_str()));
+}
+
+void apt_avail(void)
+{
+    const char *args[]=
+    {
+        "/usr/bin/apt-cache",
+        "dumpavail",
+        0
+    };
+
+    int aptfd;
+    int pid=spawn(&aptfd, (char*const*)args);
+    deb822 av;
+    av.parse_file(aptfd);
+
+    int status;
+    if (waitpid(pid, &status, 0)!=pid)
+        ERR("wait failed: %m\n");
+    if (status)
+        ERR("apt failed\n");
+
+    for (auto c=av.contents.begin(); c!=av.contents.end(); ++c)
+        avail[pav822(*c)] = std::move(*c);
 }

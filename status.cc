@@ -6,7 +6,7 @@
 static pthread_mutex_t status_mutex = PTHREAD_MUTEX_INITIALIZER;
 static deb822 status;
 
-void status_add(std::map<std::string, std::string> &&par)
+void status_add(par822 &&par)
 {
     pthread_mutex_lock(&status_mutex);
     status.contents.insert(par);

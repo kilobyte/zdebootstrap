@@ -11,7 +11,7 @@ static bool is_name_char(char c)
     return (c>='!' && c<='9') || (c>=';' && c<='~');
 }
 
-static void get_entry(std::map<std::string, std::string> &par, const char *&in)
+static void get_entry(par822 &par, const char *&in)
 {
     const char *nameB = in;
     while (is_name_char(*in))
@@ -52,7 +52,7 @@ static void get_entry(std::map<std::string, std::string> &par, const char *&in)
 
 void deb822::parse(const char *in)
 {
-    std::map<std::string, std::string> par;
+    par822 par;
 
     while (1)
     {
@@ -82,7 +82,7 @@ static void print_kv(FILE *f, const std::pair<std::string, std::string> &p)
     fprintf(f, *val=='\n'? "%s:%s\n":"%s: %s\n", p.first.c_str(), val);
 }
 
-static void print_del(FILE *f, std::map<std::string, std::string> &par, const std::string &k)
+static void print_del(FILE *f, par822 &par, const std::string &k)
 {
     auto it = par.find(k);
     if (it == par.cend())

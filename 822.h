@@ -4,6 +4,9 @@
 
 typedef std::map<std::string, std::string> par822;
 
+const std::string& field822(const par822& par, const std::string& key,
+    const std::string& none);
+
 struct deb822
 {
     void parse(const char *in);

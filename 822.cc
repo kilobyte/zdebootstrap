@@ -6,6 +6,18 @@
 #include "822.h"
 #include "zdebootstrap.h"
 
+
+const std::string& field822(const par822& par, const std::string& key,
+    const std::string& none)
+{
+    const auto f=par.find(key);
+    if (f==par.cend())
+        return none;
+    return f->second;
+}
+
+/****************************************************************************/
+
 static bool is_name_char(char c)
 {
     return (c>='!' && c<='9') || (c>=';' && c<='~');

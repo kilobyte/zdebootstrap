@@ -115,10 +115,7 @@ const std::string& deb::field(const std::string& name)
 const std::string& deb::field(const std::string& name, const std::string& none)
 {
     // Already checked there's exactly one paragraph.
-    const auto f = control.contents.cbegin()->find(name);
-    if (f == control.contents.cbegin()->cend())
-        return none;
-    return f->second;
+    return field822(*control.contents.cbegin(), name, none);
 }
 
 void deb::read_control()

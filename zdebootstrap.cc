@@ -40,6 +40,7 @@ int main(int argc, char **argv)
         { "target",	1, 0, 't' },
         { "verbose",	0, 0, 'v' },
         { "quiet",	0, 0, 'q' },
+        { "path-exclude", 1, 0, 1001 },
         {0}
     };
 
@@ -63,6 +64,9 @@ int main(int argc, char **argv)
             break;
         case 'q':
             verbose--;
+            break;
+        case 1001: // --path-exclude
+            path_excludes.insert(optarg);
             break;
         default:
             exit(1);

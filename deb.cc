@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <string.h>
+#include <fnmatch.h>
 
 #include "zdebootstrap.h"
 #include "deb.h"
@@ -356,6 +357,18 @@ void deb::read_data_inner()
             fn++;
         if (*fn != '/')
             ERR("filename inside '%s' not absolute: '%s'\n", filename, fn);
+
+        int skip=0;
+        for (auto c=path_excludes.cbegin(); c!=path_excludes.cend(); ++c)
+            if (!fnmatch(*c, fn, FNM_PATHNAME))
+            {
+                archive_read_data_skip(ac);
+                skip=1;
+                break;
+            }
+        if (skip)
+            continue;
+
         std::string fns = fn;
         if (fns.back() == '/')
         {

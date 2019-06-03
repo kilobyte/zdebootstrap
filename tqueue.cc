@@ -23,7 +23,7 @@ tqueue::tqueue(tworker_t *w, int nthreads): worker(w), idle(0), done(0)
     pthread_cond_init(&moar, nullptr);
 
     unspawned = nthreads? nthreads : get_nproc();
-    slaves.reserve(unspawned);
+    // Disabled due to a bug in plf::colony 5.09    slaves.reserve(unspawned);
 
     if (!time0)
         time0 = getticks();

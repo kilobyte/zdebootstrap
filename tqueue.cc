@@ -36,20 +36,14 @@ tqueue::~tqueue(void)
 
     pthread_cond_destroy(&moar);
     pthread_mutex_destroy(&mut);
-
-    while (!q.empty())
-    {
-        free(q.front());
-        q.pop();
-    }
 }
 
-void tqueue::saytime(const char *state, const char *task)
+void tqueue::saytime(const char *state, const std::string& task)
 {
     if (verbose < 2)
         return;
     int64_t t=getticks() - time0;
-    printf("%4d.%06d %s %s\n", (int)(t/NANO), (int)(t%NANO/1000), state, task);
+    printf("%4d.%06d %s %s\n", (int)(t/NANO), (int)(t%NANO/1000), state, task.c_str());
 }
 
 static void* slaveth(void *arg)
@@ -63,17 +57,16 @@ void tqueue::slave(void)
     while (1)
     {
         // q is non-empty on the first iteration, mutex is locked.
-        char *task = q.front();
+        std::string task = q.front();
         q.pop();
         pthread_mutex_unlock(&mut);
 
         saytime("⇒", task);
-        worker(task);
+        worker(task.c_str());
         saytime("✓", task);
 
         pthread_mutex_lock(&mut);
         task_done(task);
-        free(task);
 
         while (q.empty())
         {
@@ -90,10 +83,10 @@ void tqueue::slave(void)
     }
 }
 
-void tqueue::put(const char *item, bool spawn)
+void tqueue::put(std::string item, bool spawn)
 {
     pthread_mutex_lock(&mut);
-    q.push(strdup(item));
+    q.push(std::move(item));
 
     if (idle)
         pthread_cond_signal(&moar);
@@ -154,7 +147,7 @@ void tqueue::task_done(std::string task)
         if (!r->second.size())
         {
             pthread_mutex_unlock(&mut);
-            put(strdupe(*c));
+            put(*c);
             pthread_mutex_lock(&mut);
         }
     }

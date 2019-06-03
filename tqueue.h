@@ -10,7 +10,7 @@ struct tqueue
 {
     tqueue(tworker_t *worker, int nthreads);
     ~tqueue(void);
-    void put(const char *item, bool spawn=true);
+    void put(std::string item, bool spawn=true);
     void finish(void) { done=1; wakeall(); kill_slaves(); }
     //void halt(void) { done=2; wakeall(); kill_slaves(); }
     void slave(void);
@@ -18,8 +18,8 @@ struct tqueue
 private:
     void wakeall(void);
     void kill_slaves(void);
-    void saytime(const char *state, const char *task);
-    std::queue<char *> q;
+    void saytime(const char *state, const std::string& task);
+    std::queue<std::string> q;
     plf::colony<pthread_t> slaves;
     tworker_t *worker;
     int unspawned;

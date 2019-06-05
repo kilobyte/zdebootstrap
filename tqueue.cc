@@ -10,6 +10,8 @@
 static int64_t time0 = 0;
 #define NANO 1000000000
 
+//#define VALGRIND 1
+
 static int64_t getticks(void)
 {
     struct timespec tv;
@@ -54,8 +56,12 @@ static void* slaveth(void *arg)
 
 void tqueue::slave(void)
 {
+#ifdef VALGRIND
+    pthread_mutex_lock(&mut);
+#endif
     while (1)
     {
+        assert(!q.empty());
         // q is non-empty on the first iteration, mutex is locked.
         std::string task = q.front();
         q.pop();
@@ -85,6 +91,8 @@ void tqueue::slave(void)
 
 void tqueue::put(std::string item, bool spawn)
 {
+    assert(!item.empty());
+
     pthread_mutex_lock(&mut);
     q.push(std::move(item));
 
@@ -95,8 +103,14 @@ void tqueue::put(std::string item, bool spawn)
         unspawned--;
 
         pthread_t th;
+#ifdef VALGRIND
+        pthread_mutex_unlock(&mut);
+#endif
         if (pthread_create(&th, 0, slaveth, (void*)this))
             ERR("can't create thread: %m");
+#ifdef VALGRIND
+        pthread_mutex_lock(&mut);
+#endif
         slaves.insert(th);
     }
     pthread_mutex_unlock(&mut);

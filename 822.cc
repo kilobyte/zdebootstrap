@@ -166,7 +166,7 @@ void deb822::parse_file(int fd)
         && (mem=(char*)mmap(0, st.st_size+1, PROT_READ|PROT_WRITE, MAP_PRIVATE,
         fd, 0))!=MAP_FAILED)
     {
-        mem[st.st_mode]=0;
+        mem[st.st_size]=0;
         parse(mem);
         munmap(mem, st.st_size+1);
         close(fd);

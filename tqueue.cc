@@ -63,7 +63,7 @@ void tqueue::slave(void)
     {
         assert(!q.empty());
         // q is non-empty on the first iteration, mutex is locked.
-        std::string task = q.front();
+        std::string task = std::move(q.front());
         q.pop();
         pthread_mutex_unlock(&mut);
 

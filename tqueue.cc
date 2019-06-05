@@ -111,8 +111,18 @@ void tqueue::wakeall(void)
 
 void tqueue::kill_slaves(void)
 {
-    for (auto c = slaves.begin(); c!=slaves.end(); c=slaves.erase(c))
+    pthread_mutex_lock(&mut);
+    while (!slaves.empty())
+    {
+        auto c = slaves.begin();
+        assert(c!=slaves.end());
+        pthread_mutex_unlock(&mut);
+        // plf::colony guarantees stability of pointers w/o concurrent deletes
         pthread_join(*c, nullptr);
+        slaves.erase(c);
+        pthread_mutex_lock(&mut);
+    }
+    pthread_mutex_unlock(&mut);
 }
 
 /****************************************************************************/
@@ -120,14 +130,16 @@ void tqueue::kill_slaves(void)
 // This can't currently handle all reqs for b being already met.
 void tqueue::req(std::string a, std::string b)
 {
+    pthread_mutex_lock(&mut);
     if (tasks_done.count(a))
-        return;
+        return (void)pthread_mutex_unlock(&mut);
     reqs[b].emplace(a);
     want[a].emplace(b);
+    pthread_mutex_unlock(&mut);
 }
 
 void tqueue::task_done(std::string task)
-{
+{   // mut is locked
 #ifndef NDEBUG
     if (tasks_done.count(task))
         ERR("Task “%s” finished twice!\n", task.c_str());

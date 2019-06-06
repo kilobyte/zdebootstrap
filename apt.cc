@@ -213,3 +213,19 @@ void apt_avail(void)
     for (auto c=av.contents.begin(); c!=av.contents.end(); ++c)
         avail[pav822(*c)] = std::move(*c);
 }
+
+size_t deb_avail_size(const char *pav)
+{
+    auto c=avail.find(pav);
+    if (c==avail.cend())
+        return 0;
+
+    const char *size = field822(c->second, "Size", "0").c_str();
+    // missing size is ok, invalid size is fatal
+
+    char *end;
+    size_t val = strtoul(size, &end, 10);
+    if (*end)
+        ERR("invalid Size in apt-avail for %s: '%s'\n", pav, size);
+    return val;
+}

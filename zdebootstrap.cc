@@ -12,10 +12,56 @@
 #include "apt.h"
 #include "zdebootstrap.h"
 
-static void unpack_thread(const char* arg)
+static plf::colony<const char *> goals;
+static plf::colony<std::string> plan;
+static void apt_fetch(void);
+static void got_package(const char *pav);
+static tqueue *tq;
+
+static void zd_task(const char* task)
 {
-    deb pkg(arg);
-    pkg.unpack();
+    const char *spc = strchrnul(task, ' ');
+
+    #define TASK(x) if (!strncmp(task, (x), spc-task))
+    TASK("apt-avail")
+        apt_avail();
+    else TASK("apt-sim")
+        plan = apt_sim(goals);
+    else TASK("fetch")
+        apt_fetch();
+    else TASK("unpack")
+    {
+        deb pkg(spc+1);
+        pkg.unpack();
+    }
+    else ERR("unknown task: “%s”\n", task);
+}
+
+static void apt_fetch(void)
+{
+    for (auto c=plan.begin(); c!=plan.end(); )
+    {
+        const char *pav = c->c_str();
+        if (find_deb(orig_wd, deb_avail_size(pav), pav, nullptr))
+        {
+            got_package(pav);
+            c=plan.erase(c);
+        }
+        else
+        {
+            ++c;
+            printf("%s: ✗\n", pav);
+        }
+    }
+}
+
+static void got_package(const char *pav)
+{
+    printf("%s: ✓\n", pav);
+
+    char buf[264];
+    snprintf(buf, sizeof(buf), "unpack %s", pav);
+    tq->req(buf, "configure");
 }
 
 static unsigned parse_u(const char *arg, const char *errmsg)
@@ -83,19 +129,17 @@ int main(int argc, char **argv)
     if (mkdir_p("var/lib/dpkg/info"))
         ERR("can't mkdir -p 'var/lib/dpkg/info': %m\n");
 
-    apt_avail();
+    tqueue slaves(zd_task, nthreads);
+    tq=&slaves;
+    slaves.req("apt-avail", "fetch");
+    slaves.req("apt-sim", "fetch");
+    slaves.put("apt-avail");
 
-    plf::colony<const char *> goals;
     for (int i=optind; i<argc; i++)
         goals.insert(argv[i]);
-    plf::colony<std::string> packages = apt_sim(goals);
-    for (auto c=packages.cbegin(); c!=packages.cend(); ++c)
-        printf("%s: %s\n", c->c_str(), find_deb(orig_wd, 0, c->c_str(), nullptr)?"✓":"✗");
-    return 0;
+    slaves.put("apt-sim");
 
-    tqueue slaves(unpack_thread, nthreads);
-    for (int i=optind; i<argc; i++)
-        slaves.put(argv[i]);
+    slaves.req("fetch", "configure");
     slaves.finish();
     status_write();
 

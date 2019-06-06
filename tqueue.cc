@@ -108,9 +108,7 @@ void tqueue::put(std::string item, bool spawn)
 #endif
         if (pthread_create(&th, 0, slaveth, (void*)this))
             ERR("can't create thread: %m");
-#ifdef VALGRIND
         pthread_mutex_lock(&mut);
-#endif
         slaves.insert(th);
     }
     pthread_mutex_unlock(&mut);

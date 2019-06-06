@@ -31,9 +31,15 @@ static void zd_task(const char* task)
         apt_fetch();
     else TASK("unpack")
     {
+        int fd;
+        if (!find_deb(orig_wd, deb_avail_size(spc+1), spc+1, &fd))
+            ERR("can't find .deb for %s\n", spc+1);
         deb pkg(spc+1);
+        pkg.open_file(fd);
         pkg.unpack();
     }
+    else TASK("configure")
+        printf("configure: not implemented.\n");
     else ERR("unknown task: “%s”\n", task);
 }
 
@@ -62,6 +68,7 @@ static void got_package(const char *pav)
     char buf[264];
     snprintf(buf, sizeof(buf), "unpack %s", pav);
     tq->req(buf, "configure");
+    tq->put(buf);
 }
 
 static unsigned parse_u(const char *arg, const char *errmsg)
@@ -133,13 +140,13 @@ int main(int argc, char **argv)
     tq=&slaves;
     slaves.req("apt-avail", "fetch");
     slaves.req("apt-sim", "fetch");
+    slaves.req("fetch", "configure");
     slaves.put("apt-avail");
 
     for (int i=optind; i<argc; i++)
         goals.insert(argv[i]);
     slaves.put("apt-sim");
 
-    slaves.req("fetch", "configure");
     slaves.finish();
     status_write();
 

@@ -17,11 +17,11 @@ deb::deb(const char *fn) : filename(fn), ar(0), ar_mem(0)
 {
 }
 
-void deb::open_file()
+void deb::open_file(int fd)
 {
-    int fd;
-
-    if ((fd = openat(orig_wd, filename, O_RDONLY|O_CLOEXEC|O_NOCTTY)) == -1)
+    if (fd == -1)
+        fd = openat(orig_wd, filename, O_RDONLY|O_CLOEXEC|O_NOCTTY);
+    if (fd == -1)
         ERR("can't open '%s': %m\n", filename);
 
     struct stat st;
@@ -392,7 +392,8 @@ void deb::read_data_inner()
 
 void deb::unpack()
 {
-    open_file();
+    if (!ar_mem)
+        open_file();
     if (ar)
         check_deb_binary();
     read_control();

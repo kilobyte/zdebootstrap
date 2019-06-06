@@ -22,7 +22,7 @@ struct deb
     ~deb();
     void unpack();
 
-    void open_file();
+    void open_file(int fd=-1);
     void check_deb_binary();
     void read_control();
     void read_control_inner();

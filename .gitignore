@@ -1,6 +1,7 @@
 *~
 *.o
 zunpack
+zdebootstrap
 *.cmake
 CMakeCache.txt
 CMakeFiles/

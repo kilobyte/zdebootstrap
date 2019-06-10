@@ -315,6 +315,30 @@ void deb::read_control_inner()
     archive_read_free(ac);
 }
 
+static bool is_bad_filename(const char *fn)
+{
+    for (const char *c=fn; *c; ++c)
+    {
+        // control characters
+        if (*c<' ' || *c==0x7f)
+            return true;
+
+        // path components consisting of only dots.  Some filesystems don't
+        // like ... or ....
+        if (*c=='/' && c[1]=='.')
+            for (const char *d=c+2; ; ++d)
+            {
+                if (!*d || *d=='/')
+                    return true;
+                else if (*d!='.')
+                    break;
+            }
+
+        // TODO: Unicode
+    }
+
+    return false;
+}
 
 void deb::read_data_inner()
 {
@@ -365,6 +389,9 @@ void deb::read_data_inner()
             }
         if (skip)
             continue;
+
+        if (is_bad_filename(fn))
+            ERR("bad filename inside '%s': '%s'\n", filename, fn);
 
         std::string fns = fn;
         if (fns.back() == '/')

@@ -59,6 +59,11 @@ static void apt_fetch(void)
             printf("%s: ✗\n", pav);
         }
     }
+
+    if (plan.empty())
+        return;
+
+    apt_download(plan, got_package);
 }
 
 static void got_package(const char *pav)

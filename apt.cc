@@ -18,10 +18,10 @@ static int devnull;
 
 static std::unordered_map<std::string, par822> avail;
 
-static int spawn(int *outfd, char *const *argv)
+static int spawn(char *const *argv, int *outfd, int *errfd=nullptr)
 {
     int pid;
-    int p[2];
+    int p[2], r[2];
     posix_spawn_file_actions_t fa;
 
     if (!devnull)
@@ -36,11 +36,16 @@ static int spawn(int *outfd, char *const *argv)
     if (outfd)
         if (pipe2(p, O_CLOEXEC))
             ERR("pipe2 failed: %m\n");
+    if (errfd)
+        if (pipe2(r, O_CLOEXEC))
+            ERR("pipe2 failed: %m\n");
 
     if (posix_spawn_file_actions_init(&fa))
         ERR("posix_spawn_file_actions_init failed: %m\n");
     posix_spawn_file_actions_adddup2(&fa, devnull, 0);
     posix_spawn_file_actions_adddup2(&fa, outfd? p[1] : devnull, 1);
+    if (errfd)
+        posix_spawn_file_actions_adddup2(&fa, r[1], 2);
 
     if (posix_spawn(&pid, argv[0], &fa, nullptr, argv, environ))
     {
@@ -48,6 +53,8 @@ static int spawn(int *outfd, char *const *argv)
         posix_spawn_file_actions_destroy(&fa);
         if (outfd)
             close(p[0]), close(p[1]);
+        if (errfd)
+            close(r[0]), close(r[1]);
         errno=e;
         ERR("posix_spawn failed: %m\n");
     }
@@ -57,6 +64,11 @@ static int spawn(int *outfd, char *const *argv)
     {
         close(p[1]);
         *outfd=p[0];
+    }
+    if (errfd)
+    {
+        close(r[1]);
+        *errfd=r[0];
     }
     return pid;
 }
@@ -73,7 +85,7 @@ plf::colony<std::string> apt_sim(const plf::colony<const char*> &goals)
     args[i] = 0;
 
     int aptfd;
-    int pid=spawn(&aptfd, (char*const*)args);
+    int pid=spawn((char*const*)args, &aptfd);
 
     plf::colony<std::string> pav;
 
@@ -200,7 +212,7 @@ void apt_avail(void)
     };
 
     int aptfd;
-    int pid=spawn(&aptfd, (char*const*)args);
+    int pid=spawn((char*const*)args, &aptfd);
     deb822 av;
     av.parse_file(aptfd);
 
@@ -228,4 +240,75 @@ size_t deb_avail_size(const char *pav)
     if (*end)
         ERR("invalid Size in apt-avail for %s: '%s'\n", pav, size);
     return val;
+}
+
+void apt_download(plf::colony<std::string> &plan, void (got_package)(const char*))
+{
+    #define ARGN 3
+    const char *args[plan.size()+ARGN+1];
+    int i=0;
+    args[i++] = "/usr/bin/apt-get";
+    //args[i++] = "var/cache/apt";
+    args[i++] = "-oDebug::pkgAcquire=1";
+    args[i++] = "download";
+    for (auto gi=plan.cbegin(); gi!=plan.cend(); ++gi)
+        args[i++] = gi->c_str();
+    args[i] = 0;
+
+    int aptfd;
+    int pid=spawn((char*const*)args, nullptr, &aptfd);
+
+    FILE *f=fdopen(aptfd, "r");
+    if (!f)
+        ERR("fdopen failed: %m\n");
+
+    std::unordered_map<std::string, const char*> versions;
+    for (int j=ARGN; j<i; j++)
+    {
+        const char *pav = args[j];
+        const char *arch = strchr(pav, ':');
+        assert(arch);
+        const char *ver = strrchr(pav, '=');
+        assert(ver);
+        versions[std::string(pav, arch-pav)] = ver+1;
+    }
+
+    char line[256];
+    while (fgets(line, sizeof(line), f))
+    {
+        const char *pref = "Dequeuing ";
+        const size_t preflen = strlen(pref);
+        if (strncmp(pref, line, preflen))
+            continue;
+        char *pkg = strrchr(line+preflen, '/');
+        pkg = pkg? pkg+1 : line+preflen;
+        char *ext = strstr(pkg, ".deb\n");
+        if (!ext || ext[5])
+            continue;
+        *ext=0;
+        if (verbose >= 2)
+            printf("apt got “%s”\n", pkg);
+        char *ver = strchr(pkg, '_');
+        if (!ver)
+            continue;
+        *ver++=0;
+        char *arch = strchr(ver, '_');
+        if (!arch)
+            continue;
+        arch++;
+        const auto vi = versions.find(pkg);
+        if (vi == versions.cend())
+            continue;
+        char buf[256];
+        snprintf(buf, sizeof(buf), "%s:%s=%s", pkg, arch, vi->second);
+        got_package(buf);
+        versions.erase(vi);
+    }
+
+    fclose(f);
+    int status;
+    if (waitpid(pid, &status, 0)!=pid)
+        ERR("wait failed: %m\n");
+    if (status)
+        ERR("apt download failed\n");
 }

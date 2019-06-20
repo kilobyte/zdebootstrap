@@ -461,6 +461,14 @@ void deb::extract_entry(struct archive_entry *ent, const char *fn)
             ERR("chowning “%s” to %u:%u in “%s” failed: %m\n", fn, uid, gid, filename);
     }
 
+    mode_t perm = archive_entry_perm(ent);
+    if (type==AE_IFDIR && !(perm & 0400))
+        ERR("bad perm %04o on “%s” in “%s” not enterable by owner.\n", perm, fn, filename);
+    if (perm & ~07777)
+        ERR("bad perm %04o on “%s” in “%s” has unknown bits.\n", perm, fn, filename);
+    if (fchmod(fd, perm))
+        ERR("chmod “%s” to %04o from “%s” failed: %m\n", fn, perm, filename);
+
     if (close(fd))
         ERR("error closing file '%s' from '%s': %m\n", fn, filename);
 }
@@ -479,7 +487,7 @@ void deb::read_data_inner()
 
 #if 0
 ✓   archive_write_disk_set_options(aw, (geteuid()? 0 : ARCHIVE_EXTRACT_OWNER)
-        |ARCHIVE_EXTRACT_PERM
+✓       |ARCHIVE_EXTRACT_PERM
 ✓       |ARCHIVE_EXTRACT_TIME
 ✓       |ARCHIVE_EXTRACT_UNLINK
         |ARCHIVE_EXTRACT_SECURE_NODOTDOT

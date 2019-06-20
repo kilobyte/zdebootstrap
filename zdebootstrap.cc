@@ -138,6 +138,10 @@ int main(int argc, char **argv)
         ERR("can't mkdir -p '%s': %m\n", target);
     if (chdir(target))
         ERR("can't chdir to '%s': %m\n", target);
+    if ((target_wd=open(".", O_DIRECTORY|O_PATH|O_CLOEXEC))==-1)
+        ERR("can't open target dir '%s': %m\n", target);
+    if (!(abs_target=getcwd(0,0)))
+        ERR("getcwd failed: %m\n");
     if (mkdir_p("var/lib/dpkg/info"))
         ERR("can't mkdir -p 'var/lib/dpkg/info': %m\n");
 

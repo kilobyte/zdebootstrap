@@ -2,7 +2,8 @@
 #include <plf_colony.h>
 
 extern const char *target;
-extern int orig_wd;
+extern int orig_wd, target_wd;
+extern char *abs_target;
 extern int verbose;
 extern plf::colony<const char*> path_excludes;
 

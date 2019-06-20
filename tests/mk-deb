@@ -42,6 +42,7 @@ my $tsrcdir=$0;
 $tsrcdir=~s:[^/]*$::;
 
 my $cdir=tempdir(CLEANUP=>1);
+my $ddir=tempdir(CLEANUP=>1);
 my $wdir=tempdir(CLEANUP=>1);
 
 open F, '>', "$cdir/control";
@@ -51,7 +52,10 @@ close F;
 system 'tar', 'cf', "$wdir/control.tar", '-C', $cdir, './control';
 $comp{$cz} && system "$comp{$cz} $wdir/control.tar";
 
-system 'tar', 'cf', "$wdir/data.tar", '-C', "${tsrcdir}deb-data", map("./$_", @data);
+system 'tar', 'cf', "$wdir/dtmp.tar", '-C', "${tsrcdir}deb-data", map("./$_", @data);
+system 'tar', 'xf', "$wdir/dtmp.tar", '-C', $ddir;
+unlink "$wdir/dtmp.tar";
+system 'tar', 'cf', "$wdir/data.tar", '-C', $ddir, '.';
 $comp{$dz} && system"$comp{$dz} $wdir/data.tar" ;
 
 $cz and $cz=".$cz";

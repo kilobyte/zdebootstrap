@@ -94,9 +94,9 @@ plf::colony<std::string> apt_sim(const plf::colony<const char*> &goals)
 
     while (fgets(line, sizeof(line), f))
     {
-        char pkg[256], *p=pkg;
-        char ver[256], *v=ver;
-        char arch[256], *a=arch;
+        char pkg[sizeof(line)], *p=pkg;
+        char ver[sizeof(line)], *v=ver;
+        char arch[sizeof(line)], *a=arch;
 
         // We want: Inst strace (4.15-2 Debian:9.9/stable [arm64])
 
@@ -117,7 +117,7 @@ plf::colony<std::string> apt_sim(const plf::colony<const char*> &goals)
         GET(']'); GET(')'); GET('\n'); GET(0);
 
         *p=*v=*a=0;
-        pav.emplace(line, sprintf(line, "%s:%s=%s", pkg, arch, ver));
+        pav.emplace(line, snprintf(line, sizeof(line), "%s:%s=%s", pkg, arch, ver));
     }
 
     fclose(f);

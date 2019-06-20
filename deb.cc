@@ -372,23 +372,24 @@ void deb::extract_entry(struct archive_entry *ent, const char *fn)
     if (type!=AE_IFREG && type!=AE_IFLNK && type!=AE_IFDIR && type!=0)
         ERR("invalid file type in '%s' for '%s'\n", filename, fn);
 
-#if 0
-    switch (type)
+    if (verbose >= 3)
     {
-        case AE_IFREG:
-            printf("📄 %s\n", fn);
-            break;
-        case AE_IFLNK:
-            printf("🔗 %s → %s\n", fn, archive_entry_symlink(ent));
-            break;
-        case AE_IFDIR:
-            printf("📁 %s\n", fn);
-            break;
-        case 0:
-            printf("🔖 %s → %s\n", fn, archive_entry_hardlink(ent));
-            return;
+        switch (type)
+        {
+            case AE_IFREG:
+                printf("📄 %s\n", fn);
+                break;
+            case AE_IFLNK:
+                printf("🔗 %s → %s\n", fn, archive_entry_symlink(ent));
+                break;
+            case AE_IFDIR:
+                printf("📁 %s\n", fn);
+                break;
+            case 0:
+                printf("🔖 %s → %s\n", fn, archive_entry_hardlink(ent));
+                return;
+        }
     }
-#endif
 
     struct stat st;
     int err=fstatat(pdir, base, &st, AT_SYMLINK_NOFOLLOW);

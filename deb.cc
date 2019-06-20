@@ -423,14 +423,14 @@ void deb::extract_entry(struct archive_entry *ent, const char *fn)
                 ERR("symlinkat(“%s”, “%s”) failed: %m\n", dir, base);
             fd=openat(pdir, base, O_PATH|O_CLOEXEC|O_NOFOLLOW);
             if (fd==-1)
-                ERR("error opening just created symlink “%s” from “%s”: %m", fn, filename);
+                ERR("error opening just created symlink “%s” from “%s”: %m\n", fn, filename);
             break;
         case AE_IFDIR:
             if (mkdirat(pdir, base, 0700) && errno!=EEXIST)
                 ERR("mkdirat(“%s”, “%s”) failed: %m\n", dir, base);
-            fd=openat(pdir, base, O_PATH|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
+            fd=openat(pdir, base, O_RDONLY|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
             if (fd==-1)
-                ERR("error opening just created dir “%s” from “%s”: %m", fn, filename);
+                ERR("error opening just created dir “%s” from “%s”: %m\n", fn, filename);
             break;
         case 0:
             // TODO: secure open
@@ -439,10 +439,18 @@ void deb::extract_entry(struct archive_entry *ent, const char *fn)
                 ERR("linkat(“%s”, “%s”, “%s”) failed: %m\n",
                     archive_entry_hardlink(ent), dir, base);
             }
+            // Won't update owner, perms, mtime, ...
             return;
         default:
             ERR("invalid file type in '%s' for '%s'\n", filename, fn);
     }
+
+    struct timespec times[2];
+    times[0].tv_nsec=UTIME_NOW;
+    times[1].tv_sec =archive_entry_mtime(ent);
+    times[1].tv_nsec=archive_entry_mtime_nsec(ent);
+    futimens(fd, times);
+    // TODO: dir mtimes should be set after insides are written
 
     if (close(fd))
         ERR("error closing file '%s' from '%s': %m\n", fn, filename);
@@ -463,7 +471,7 @@ void deb::read_data_inner()
 #if 0
     archive_write_disk_set_options(aw, (geteuid()? 0 : ARCHIVE_EXTRACT_OWNER)
         |ARCHIVE_EXTRACT_PERM
-        |ARCHIVE_EXTRACT_TIME
+✓       |ARCHIVE_EXTRACT_TIME
 ✓       |ARCHIVE_EXTRACT_UNLINK
         |ARCHIVE_EXTRACT_SECURE_NODOTDOT
         |ARCHIVE_EXTRACT_SECURE_NOABSOLUTEPATHS

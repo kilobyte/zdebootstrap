@@ -452,6 +452,16 @@ void deb::extract_entry(struct archive_entry *ent, const char *fn)
     futimens(fd, times);
     // TODO: dir mtimes should be set after insides are written
 
+    if (!geteuid())
+    {
+        uid_t uid = archive_entry_uid(ent);
+        gid_t gid = archive_entry_gid(ent);
+        if (uid >= 100 || gid >= 100)
+            ERR("bad uid:gid %u:%u on “%s” in “%s”\n", uid, gid, fn, filename);
+        if (fchownat(fd, "", uid, gid, AT_EMPTY_PATH))
+            ERR("chowning “%s” to %u:%u in “%s” failed: %m\n", fn, uid, gid, filename);
+    }
+
     if (close(fd))
         ERR("error closing file '%s' from '%s': %m\n", fn, filename);
 }
@@ -469,7 +479,7 @@ void deb::read_data_inner()
     archive_read_support_format_tar(ac);
 
 #if 0
-    archive_write_disk_set_options(aw, (geteuid()? 0 : ARCHIVE_EXTRACT_OWNER)
+✓   archive_write_disk_set_options(aw, (geteuid()? 0 : ARCHIVE_EXTRACT_OWNER)
         |ARCHIVE_EXTRACT_PERM
 ✓       |ARCHIVE_EXTRACT_TIME
 ✓       |ARCHIVE_EXTRACT_UNLINK

@@ -32,6 +32,8 @@ struct deb
     void read_data_inner();
     void write_list();
     void write_info();
+    void open_dir(const char *dir);
+    void extract_entry(struct archive_entry *ent, const char *fn);
     const std::string& field(const std::string& name);
     const std::string& field(const std::string& name, const std::string& none);
 
@@ -39,9 +41,10 @@ struct deb
     std::string basename;
     struct archive *ar; // ar
     struct archive *ac; // control.tar.gz, data.tar.gz
-    struct archive *aw; // file being extracted
     char *ar_mem, *c_mem, *d_mem;
     size_t len;
+    int pdir;
+    std::string ppath;
 
     plf::colony<std::string> contents;
     deb822 control;

@@ -7,13 +7,14 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <fnmatch.h>
+#include <libgen.h>
 
 #include "zdebootstrap.h"
 #include "deb.h"
 #include "util.h"
 #include "status.h"
 
-deb::deb(const char *fn) : filename(fn), ar(0), ar_mem(0)
+deb::deb(const char *fn) : filename(fn), ar(0), ar_mem(0), pdir(-1)
 {
 }
 
@@ -221,6 +222,8 @@ deb::~deb()
         archive_read_free(ar);
     if (ar_mem)
         munmap(ar_mem, len);
+    if (pdir!=-1)
+        close(pdir);
 }
 
 void deb::slurp_control_file()
@@ -340,6 +343,111 @@ static bool is_bad_filename(const char *fn)
     return false;
 }
 
+void deb::open_dir(const char *dir)
+{
+    if (pdir != -1)
+    {
+        if (ppath == dir)
+            return;
+        close(pdir);
+    }
+
+    ppath = dir;
+    if (*dir=='/')
+        ++dir;
+    pdir=open(*dir? dir : ".", O_DIRECTORY|O_PATH|O_CLOEXEC|O_NOFOLLOW);
+    if (pdir == -1)
+        ERR("open(“%s”, O_PATH) failed: %m\n", dir);
+    // TODO: validate
+}
+
+void deb::extract_entry(struct archive_entry *ent, const char *fn)
+{
+    std::string path1(fn), path2(fn);
+    const char *base = ::basename((char*)path1.c_str());
+    const char *dir = ::dirname((char*)path2.c_str());
+    open_dir(dir);
+
+    mode_t type = archive_entry_filetype(ent);
+    if (type!=AE_IFREG && type!=AE_IFLNK && type!=AE_IFDIR && type!=0)
+        ERR("invalid file type in '%s' for '%s'\n", filename, fn);
+
+#if 0
+    switch (type)
+    {
+        case AE_IFREG:
+            printf("📄 %s\n", fn);
+            break;
+        case AE_IFLNK:
+            printf("🔗 %s → %s\n", fn, archive_entry_symlink(ent));
+            break;
+        case AE_IFDIR:
+            printf("📁 %s\n", fn);
+            break;
+        case 0:
+            printf("🔖 %s → %s\n", fn, archive_entry_hardlink(ent));
+            return;
+    }
+#endif
+
+    struct stat st;
+    int err=fstatat(pdir, base, &st, AT_SYMLINK_NOFOLLOW);
+    if (err && errno!=ENOENT)
+        ERR("fstatat(“%s”, “%s”) failed: %m\n", dir, base);
+    if (!err)
+    {
+        if (type==AE_IFDIR && S_ISDIR(st.st_mode))
+            return; // many packages may have the same dir
+
+        if (unlinkat(pdir, base, 0))
+            ERR("unlinkat(“%s”, “%s”) failed: %m\n", dir, base);
+    }
+
+    int fd=-1;
+    switch (type)
+    {
+        case AE_IFREG:
+            // O_EXCL is intentional: unlink above is for retrying installation;
+            // a file conflict is banned.
+            fd=openat(pdir, base, O_WRONLY|O_CREAT|O_EXCL|O_CLOEXEC|O_NOFOLLOW, 0700);
+            if (fd==-1)
+                ERR("Can't create file (“%s”, “%s”): %m\n", dir, base);
+            if (archive_read_data_into_fd(ac, fd))
+            {
+                ERR("error extracting file '%s' from '%s': %s\n",
+                    fn, filename, archive_error_string(ac));
+            }
+            break;
+        case AE_IFLNK:
+            if (symlinkat(archive_entry_symlink(ent), pdir, base))
+                ERR("symlinkat(“%s”, “%s”) failed: %m\n", dir, base);
+            fd=openat(pdir, base, O_PATH|O_CLOEXEC|O_NOFOLLOW);
+            if (fd==-1)
+                ERR("error opening just created symlink “%s” from “%s”: %m", fn, filename);
+            break;
+        case AE_IFDIR:
+            if (mkdirat(pdir, base, 0700) && errno!=EEXIST)
+                ERR("mkdirat(“%s”, “%s”) failed: %m\n", dir, base);
+            fd=openat(pdir, base, O_PATH|O_DIRECTORY|O_CLOEXEC|O_NOFOLLOW);
+            if (fd==-1)
+                ERR("error opening just created dir “%s” from “%s”: %m", fn, filename);
+            break;
+        case 0:
+            // TODO: secure open
+            if (linkat(AT_FDCWD, archive_entry_hardlink(ent), pdir, base, 0))
+            {
+                ERR("linkat(“%s”, “%s”, “%s”) failed: %m\n",
+                    archive_entry_hardlink(ent), dir, base);
+            }
+            return;
+        default:
+            ERR("invalid file type in '%s' for '%s'\n", filename, fn);
+    }
+
+    if (close(fd))
+        ERR("error closing file '%s' from '%s': %m\n", fn, filename);
+}
+
 void deb::read_data_inner()
 {
     if (!(ac = archive_read_new()))
@@ -352,10 +460,7 @@ void deb::read_data_inner()
     archive_read_support_filter_zstd(ac);
     archive_read_support_format_tar(ac);
 
-    // TODO: free earlier allocs on error
-    if (!(aw = archive_write_disk_new()))
-        ERR("can't create a new libarchive write object\n");
-
+#if 0
     archive_write_disk_set_options(aw, (geteuid()? 0 : ARCHIVE_EXTRACT_OWNER)
         |ARCHIVE_EXTRACT_PERM
         |ARCHIVE_EXTRACT_TIME
@@ -364,6 +469,7 @@ void deb::read_data_inner()
         |ARCHIVE_EXTRACT_SECURE_NOABSOLUTEPATHS
         |ARCHIVE_EXTRACT_CLEAR_NOCHANGE_FFLAGS
         |ARCHIVE_EXTRACT_SECURE_SYMLINKS);
+#endif
 
     if (ar? archive_read_open(ac, this, 0, deb_ar_comp_read, 0)
           : archive_read_open_memory(ac, d_mem, len-(d_mem-ar_mem)))
@@ -379,7 +485,7 @@ void deb::read_data_inner()
         if (*fn != '/')
             ERR("filename inside '%s' not absolute: '%s'\n", filename, fn);
 
-        int skip=0;
+        int skip = !fn[1];
         for (auto c=path_excludes.cbegin(); c!=path_excludes.cend(); ++c)
             if (!fnmatch(*c, fn, FNM_PATHNAME))
             {
@@ -403,17 +509,12 @@ void deb::read_data_inner()
 
         contents.emplace(fns);
 
-        if ((err = archive_read_extract2(ac, ent, aw)))
-        {
-            ERR("error extracting deb entry '%s' from '%s': %s\n",
-                archive_entry_pathname(ent), filename, archive_error_string(ac));
-        }
+        extract_entry(ent, fn);
     }
 
     if (err != ARCHIVE_EOF)
         ERR("can't list deb data: '%s': %s\n", filename, archive_error_string(ac));
 
-    archive_write_free(aw);
     archive_read_free(ac);
 }
 

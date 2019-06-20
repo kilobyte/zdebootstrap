@@ -422,10 +422,8 @@ void deb::extract_entry(struct archive_entry *ent, const char *fn)
         case AE_IFLNK:
             if (symlinkat(archive_entry_symlink(ent), pdir, base))
                 ERR("symlinkat(“%s”, “%s”) failed: %m\n", dir, base);
-            fd=openat(pdir, base, O_PATH|O_CLOEXEC|O_NOFOLLOW);
-            if (fd==-1)
-                ERR("error opening just created symlink “%s” from “%s”: %m\n", fn, filename);
-            break;
+            // Don't set owner/perms/...
+            return;
         case AE_IFDIR:
             if (mkdirat(pdir, base, 0700) && errno!=EEXIST)
                 ERR("mkdirat(“%s”, “%s”) failed: %m\n", dir, base);

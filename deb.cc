@@ -323,7 +323,7 @@ static bool is_bad_filename(const char *fn)
     for (const char *c=fn; *c; ++c)
     {
         // control characters
-        if (*c<' ' || *c==0x7f)
+        if ((unsigned char)*c<' ' || *c==0x7f)
             return true;
 
         // TODO: Unicode

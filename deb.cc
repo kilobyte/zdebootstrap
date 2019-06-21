@@ -326,17 +326,6 @@ static bool is_bad_filename(const char *fn)
         if (*c<' ' || *c==0x7f)
             return true;
 
-        // path components consisting of only dots.  Some filesystems don't
-        // like ... or ....
-        if (*c=='/' && c[1]=='.')
-            for (const char *d=c+2; ; ++d)
-            {
-                if (!*d || *d=='/')
-                    return true;
-                else if (*d!='.')
-                    break;
-            }
-
         // TODO: Unicode
     }
 

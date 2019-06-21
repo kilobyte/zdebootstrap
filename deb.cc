@@ -355,6 +355,14 @@ void deb::extract_hardlink(const char *dest, const char *base, const char *fn)
     const char *dbase = ::basename((char*)path1.c_str());
     const char *ddir = ::dirname((char*)path2.c_str());
 
+    // Common case is same-dir hardlinks; ppath had initial . stripped.
+    if (ppath == ((ddir[0]=='.' && ddir[1]=='/')? ddir+1 : ddir))
+    {
+        if (linkat(pdir, dbase, pdir, base, 0))
+            ERR("linkat(“%s”, “%s”, “%s”) failed: %m\n", dest, ppath.c_str(), base);
+        return;
+    }
+
     int dd = open_in_target(ddir, O_DIRECTORY|O_PATH);
     if (dd==-1)
     {

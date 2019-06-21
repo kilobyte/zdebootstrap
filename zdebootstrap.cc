@@ -6,7 +6,7 @@
 #include <getopt.h>
 
 #include "deb.h"
-#include "util.h"
+#include "paths.h"
 #include "tqueue.h"
 #include "status.h"
 #include "apt.h"
@@ -134,16 +134,7 @@ int main(int argc, char **argv)
     if (!argv[optind])
         ERR("Usage: zunpack a.deb b.deb...\n");
 
-    if (mkdir_p(target))
-        ERR("can't mkdir -p '%s': %m\n", target);
-    if (chdir(target))
-        ERR("can't chdir to '%s': %m\n", target);
-    if ((target_wd=open(".", O_DIRECTORY|O_PATH|O_CLOEXEC))==-1)
-        ERR("can't open target dir '%s': %m\n", target);
-    if (!(abs_target=getcwd(0,0)))
-        ERR("getcwd failed: %m\n");
-    if (mkdir_p("var/lib/dpkg/info"))
-        ERR("can't mkdir -p 'var/lib/dpkg/info': %m\n");
+    mk_target();
 
     tqueue slaves(zd_task, nthreads);
     tq=&slaves;

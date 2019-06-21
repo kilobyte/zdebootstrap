@@ -349,6 +349,24 @@ void deb::open_dir(const char *dir)
         ERR("open(“%s”, O_PATH) failed: %m\n", dir);
 }
 
+void deb::extract_hardlink(const char *dest, const char *base, const char *fn)
+{
+    std::string path1(dest), path2(dest);
+    const char *dbase = ::basename((char*)path1.c_str());
+    const char *ddir = ::dirname((char*)path2.c_str());
+
+    int dd = open_in_target(ddir, O_DIRECTORY|O_PATH);
+    if (dd==-1)
+    {
+        ERR("Can't open parent dir “%s” of hardlink “%s” → “%s” in “%s”: %m\n",
+            ddir, fn, dest, filename);
+    }
+
+    if (linkat(dd, dbase, pdir, base, 0))
+        ERR("linkat(“%s”, “%s”, “%s”) failed: %m\n", dest, ppath.c_str(), base);
+    close(dd);
+}
+
 void deb::extract_entry(struct archive_entry *ent, const char *fn)
 {
     std::string path1(fn), path2(fn);
@@ -375,7 +393,6 @@ void deb::extract_entry(struct archive_entry *ent, const char *fn)
                 break;
             case 0:
                 printf("🔖 %s → %s\n", fn, archive_entry_hardlink(ent));
-                return;
         }
     }
 
@@ -420,12 +437,7 @@ void deb::extract_entry(struct archive_entry *ent, const char *fn)
                 ERR("error opening just created dir “%s” from “%s”: %m\n", fn, filename);
             break;
         case 0:
-            // TODO: secure open
-            if (linkat(AT_FDCWD, archive_entry_hardlink(ent), pdir, base, 0))
-            {
-                ERR("linkat(“%s”, “%s”, “%s”) failed: %m\n",
-                    archive_entry_hardlink(ent), dir, base);
-            }
+            extract_hardlink(archive_entry_hardlink(ent), base, fn);
             // Won't update owner, perms, mtime, ...
             return;
         default:

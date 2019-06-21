@@ -33,6 +33,7 @@ struct deb
     void write_list();
     void write_info();
     void open_dir(const char *dir);
+    void extract_hardlink(const char *dest, const char *base, const char *fn);
     void extract_entry(struct archive_entry *ent, const char *fn);
     const std::string& field(const std::string& name);
     const std::string& field(const std::string& name, const std::string& none);

@@ -48,6 +48,9 @@ void mk_target(void)
 // The target may be a symlink, dirs inside at most mount points.
 int open_in_target(const char *path, int flags)
 {
+    if (path[0]=='.' && path[1]=='/')
+        path+=2;
+
     if (!strcmp(path, ".")) // would be elided later, simplify logic
         return openat(target_wd, ".", flags|O_CLOEXEC|O_NOFOLLOW);
 

@@ -493,17 +493,6 @@ void deb::read_data_inner()
     archive_read_support_filter_zstd(ac);
     archive_read_support_format_tar(ac);
 
-#if 0
-✓   archive_write_disk_set_options(aw, (geteuid()? 0 : ARCHIVE_EXTRACT_OWNER)
-✓       |ARCHIVE_EXTRACT_PERM
-✓       |ARCHIVE_EXTRACT_TIME
-✓       |ARCHIVE_EXTRACT_UNLINK
-✓       |ARCHIVE_EXTRACT_SECURE_NODOTDOT
-!       |ARCHIVE_EXTRACT_SECURE_NOABSOLUTEPATHS
-✗       |ARCHIVE_EXTRACT_CLEAR_NOCHANGE_FFLAGS
-✓       |ARCHIVE_EXTRACT_SECURE_SYMLINKS);
-#endif
-
     if (ar? archive_read_open(ac, this, 0, deb_ar_comp_read, 0)
           : archive_read_open_memory(ac, d_mem, len-(d_mem-ar_mem)))
         ERR("can't open deb data: '%s': %s\n", filename, archive_error_string(ac));

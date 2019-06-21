@@ -1,6 +1,5 @@
 #include "tqueue.h"
 #include "nproc.h"
-#include "util.h"
 #include "zdebootstrap.h"
 #include <unistd.h>
 #include <stdlib.h>

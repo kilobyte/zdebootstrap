@@ -41,7 +41,6 @@ add_library(COMMON OBJECT
 	${CMAKE_SOURCE_DIR}/status.cc
 	${CMAKE_SOURCE_DIR}/tqueue.cc
 	${CMAKE_SOURCE_DIR}/apt.cc
-	${CMAKE_SOURCE_DIR}/util.cc
 	${CMAKE_SOURCE_DIR}/nproc.cc
 	${CMAKE_SOURCE_DIR}/paths.cc
 	${CMAKE_SOURCE_DIR}/globals.cc)

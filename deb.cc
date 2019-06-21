@@ -11,7 +11,6 @@
 
 #include "zdebootstrap.h"
 #include "deb.h"
-#include "util.h"
 #include "status.h"
 
 deb::deb(const char *fn) : filename(fn), ar(0), ar_mem(0), pdir(-1)

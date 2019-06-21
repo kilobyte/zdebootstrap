@@ -21,6 +21,7 @@ add_test(822-read ${TD}/runtests ${TD}/cat-re822 ${TD}/822)
 
 add_test(bad_debs ${TD}/runtests ${TD}/unp_deb ${TD}/bad_debs)
 add_test(compress ${TD}/runtests "${TD}/unp_deb -" ${TD}/compress)
+add_test(extract ${TD}/runtests "${TD}/unp_deb -" ${TD}/extract)
 
 build_test(tq)
 add_test(tqueue ${TD}/runtests ./tq ${TD}/tqueue)

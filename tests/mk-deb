@@ -1,19 +1,27 @@
 #!/usr/bin/perl -w
 use autodie qw(:all);
 use File::Temp qw(tempdir);
+use File::Path qw(make_path);
 
 my $format;
 my $cz='gz';
 my $dz='gz';
 my $control;
-my @data;
+my (@files, @dirs, @symlinks, @hardlinks);
 
 while (<STDIN>)
 {
+    chomp;
     /^Format: 2(?:|\.0)$/? $format=2
     :/^Format: 0\.93(?:|9|9000)$/? $format=1
     :/^CZ: (.*)/? $cz=$1
     :/^DZ: (.*)/? $dz=$1
+    :/^F: (.*)/? push @files, $1
+    :/^D: (.*)/? push @dirs, $1
+    :/^S: (.*)/? push @symlinks, $1
+    :/^H: (.*)/? push @hardlinks, $1
+    :/^\w*$/? 0
+    :/^#.*/? 0
     :die "Bad line: '$_'\n";
 }
 
@@ -33,7 +41,7 @@ Description: etaoin shrdlu
  occaecat cupidatat non proident, sunt in culpa qui officia deserunt
  mollit anim id est laborum.
 EOF
-@data or @data=qw(usr/share/doc/dupa/README);
+@files or @files=qw(usr/share/doc/dupa/README);
 
 my %comp=("gz"=>"gzip -9n", "xz"=>"xz", "bz2"=>"bzip2",
     "lzma"=>"xz --format=lzma", "zst"=>"zstd -q");
@@ -52,8 +60,19 @@ close F;
 system 'tar', 'cf', "$wdir/control.tar", '-C', $cdir, './control';
 $comp{$cz} && system "$comp{$cz} $wdir/control.tar";
 
-system 'tar', 'cf', "$wdir/dtmp.tar", '-C', "${tsrcdir}deb-data", map("./$_", @data);
+system 'tar', 'cf', "$wdir/dtmp.tar", '-C', "${tsrcdir}deb-data", map("./$_", @files);
 system 'tar', 'xf', "$wdir/dtmp.tar", '-C', $ddir;
+make_path map("$ddir/$_", @dirs);
+for (@symlinks)
+{
+    /^(\S+)\s+(\S+)$/ or die "Invalid symlink line: ｢$_｣\n";
+    symlink $1, "$ddir/$2";
+}
+for (@hardlinks)
+{
+    /^(\S+)\s+(\S+)$/ or die "Invalid hardlink line: ｢$_｣\n";
+    link "$ddir/$1", "$ddir/$2";
+}
 unlink "$wdir/dtmp.tar";
 system 'tar', 'cf', "$wdir/data.tar", '-C', $ddir, '.';
 $comp{$dz} && system"$comp{$dz} $wdir/data.tar" ;

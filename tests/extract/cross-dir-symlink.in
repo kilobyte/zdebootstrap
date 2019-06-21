@@ -1,0 +1,5 @@
+Format: 2
+
+F: usr/share/doc/dupa/README
+D: usr/share/doc/dupa-dev
+S: ../dupa/README usr/share/doc/dupa-dev/meow

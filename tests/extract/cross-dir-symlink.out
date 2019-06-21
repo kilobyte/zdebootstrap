@@ -1,0 +1,14 @@
+
+usr
+usr/share
+usr/share/doc
+usr/share/doc/dupa
+usr/share/doc/dupa-dev
+usr/share/doc/dupa-dev/meow
+usr/share/doc/dupa/README
+var
+var/lib
+var/lib/dpkg
+var/lib/dpkg/info
+var/lib/dpkg/info/dupa.list
+var/lib/dpkg/status

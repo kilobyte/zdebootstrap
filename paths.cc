@@ -10,7 +10,9 @@
 
 const char *target;
 int orig_wd, target_wd;
-char *abs_target;
+static char *abs_target;
+static size_t abs_target_len;
+static int proc_self;
 
 static int mkdir_p(const char *path)
 {
@@ -37,6 +39,49 @@ void mk_target(void)
         ERR("can't open target dir '%s': %m\n", target);
     if (!(abs_target=getcwd(0,0)))
         ERR("getcwd failed: %m\n");
+    abs_target_len=strlen(abs_target);
     if (mkdir_p("var/lib/dpkg/info"))
         ERR("can't mkdir -p 'var/lib/dpkg/info': %m\n");
+}
+
+// Open a file/dir securely, beating "..", symlink+race attacks, etc.
+// The target may be a symlink, dirs inside at most mount points.
+int open_in_target(const char *path, int flags)
+{
+    if (!strcmp(path, ".")) // would be elided later, simplify logic
+        return openat(target_wd, ".", flags|O_CLOEXEC|O_NOFOLLOW);
+
+    int fd = openat(target_wd, path, flags|O_CLOEXEC|O_NOFOLLOW);
+    if (fd==-1)
+        return -1;
+
+    if (!proc_self)
+    {
+        int ps=open("/proc/self", O_DIRECTORY|O_CLOEXEC);
+        if (ps!=-1)
+            if (!__sync_bool_compare_and_swap(&proc_self, 0, ps))
+                close(ps);
+    }
+
+    if (proc_self == -1)
+        return fd; // until resolveat() is merged, can't do more
+
+    char fds[15];
+    sprintf(fds, "fd/%d", fd);
+    char realpath[4096]; // limited buffer is ok
+    ssize_t ll = readlinkat(proc_self, fds, realpath, sizeof(realpath));
+    if (ll == -1)
+        ERR("can't read proc link for “%s”: %m\n", path);
+
+    size_t plen = strlen(path);
+    if ((size_t)ll != abs_target_len+1+plen
+        || memcmp(realpath, abs_target, abs_target_len)
+        || realpath[abs_target_len]!='/' // cwd was sanitized
+        || memcmp(realpath+abs_target_len+1, path, plen))
+    {
+        ERR("Treyf path: “%s” in “%s” resolved to “%.*s”\n", path, abs_target,
+            (int)ll, realpath);
+    }
+
+    return fd;
 }

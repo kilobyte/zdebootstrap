@@ -12,6 +12,7 @@
 #include "zdebootstrap.h"
 #include "deb.h"
 #include "status.h"
+#include "paths.h"
 
 deb::deb(const char *fn) : filename(fn), ar(0), ar_mem(0), pdir(-1)
 {
@@ -354,10 +355,9 @@ void deb::open_dir(const char *dir)
     ppath = dir;
     if (*dir=='/')
         ++dir;
-    pdir=open(*dir? dir : ".", O_DIRECTORY|O_PATH|O_CLOEXEC|O_NOFOLLOW);
+    pdir = open_in_target(*dir? dir : ".", O_DIRECTORY|O_PATH);
     if (pdir == -1)
         ERR("open(“%s”, O_PATH) failed: %m\n", dir);
-    // TODO: validate
 }
 
 void deb::extract_entry(struct archive_entry *ent, const char *fn)
@@ -489,10 +489,10 @@ void deb::read_data_inner()
 ✓       |ARCHIVE_EXTRACT_PERM
 ✓       |ARCHIVE_EXTRACT_TIME
 ✓       |ARCHIVE_EXTRACT_UNLINK
-        |ARCHIVE_EXTRACT_SECURE_NODOTDOT
-        |ARCHIVE_EXTRACT_SECURE_NOABSOLUTEPATHS
+✓       |ARCHIVE_EXTRACT_SECURE_NODOTDOT
+!       |ARCHIVE_EXTRACT_SECURE_NOABSOLUTEPATHS
 ✗       |ARCHIVE_EXTRACT_CLEAR_NOCHANGE_FFLAGS
-        |ARCHIVE_EXTRACT_SECURE_SYMLINKS);
+✓       |ARCHIVE_EXTRACT_SECURE_SYMLINKS);
 #endif
 
     if (ar? archive_read_open(ac, this, 0, deb_ar_comp_read, 0)

@@ -457,7 +457,7 @@ void deb::extract_entry(struct archive_entry *ent, const char *fn)
     times[1].tv_sec =archive_entry_mtime(ent);
     times[1].tv_nsec=archive_entry_mtime_nsec(ent);
     futimens(fd, times);
-    // TODO: dir mtimes should be set after insides are written
+    // Non-empty dirs will have their mtimes trampled upon immediately.
 
     if (!geteuid())
     {

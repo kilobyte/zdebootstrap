@@ -14,4 +14,4 @@ if ($deb eq "-")
 
 my $dir = tempdir(CLEANUP => 1);
 system("../zunpack", "-t", $dir, "-q", $deb) && exit 1;
-system("find \"$dir\" -printf '%P\n'|sort");
+system("find \"$dir\" -printf '%P\n'|LC_ALL=C.UTF-8 sort");

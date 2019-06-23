@@ -1,7 +1,6 @@
 #include <archive.h>
 #include <archive_entry.h>
 #include <sys/types.h>
-#include <fcntl.h>
 #include <limits.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -344,7 +343,7 @@ void deb::open_dir(const char *dir)
     ppath = dir;
     if (*dir=='/')
         ++dir;
-    pdir = open_in_target(*dir? dir : ".", O_DIRECTORY|O_PATH);
+    pdir = open_in_target(*dir? dir : ".", O_DIRECTORY|O_PATH_RD);
     if (pdir == -1)
         ERR("open(“%s”, O_PATH) failed: %m\n", dir);
 }
@@ -363,7 +362,7 @@ void deb::extract_hardlink(const char *dest, const char *base, const char *fn)
         return;
     }
 
-    int dd = open_in_target(ddir, O_DIRECTORY|O_PATH);
+    int dd = open_in_target(ddir, O_DIRECTORY|O_PATH_RD);
     if (dd==-1)
     {
         ERR("Can't open parent dir “%s” of hardlink “%s” → “%s” in “%s”: %m\n",

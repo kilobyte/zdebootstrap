@@ -2,7 +2,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <fcntl.h>
 #include <getopt.h>
 
 #include "deb.h"
@@ -87,7 +86,7 @@ static unsigned parse_u(const char *arg, const char *errmsg)
 
 int main(int argc, char **argv)
 {
-    if ((orig_wd = open(".", O_RDONLY|O_DIRECTORY|O_PATH|O_CLOEXEC)) == -1)
+    if ((orig_wd = open(".", O_DIRECTORY|O_PATH_RD|O_CLOEXEC)) == -1)
         ERR("can't open current working directory\n");
 
     target = "target";

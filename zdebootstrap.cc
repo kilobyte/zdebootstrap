@@ -16,6 +16,7 @@ static plf::colony<std::string> plan;
 static void apt_fetch(void);
 static void got_package(const char *pav);
 static tqueue *tq;
+static pthread_mutex_t done_mut = PTHREAD_MUTEX_INITIALIZER;
 
 static void zd_task(const char* task)
 {
@@ -39,6 +40,8 @@ static void zd_task(const char* task)
     }
     else TASK("configure")
         printf("configure: not implemented.\n");
+    else TASK("done")
+        pthread_mutex_unlock(&done_mut);
     else ERR("unknown task: “%s”\n", task);
 }
 
@@ -135,17 +138,20 @@ int main(int argc, char **argv)
 
     mk_target();
 
+    pthread_mutex_lock(&done_mut);
     tqueue slaves(zd_task, nthreads);
     tq=&slaves;
     slaves.req("apt-avail", "fetch");
     slaves.req("apt-sim", "fetch");
     slaves.req("fetch", "configure");
+    slaves.req("configure", "done");
     slaves.put("apt-avail");
 
     for (int i=optind; i<argc; i++)
         goals.insert(argv[i]);
     slaves.put("apt-sim");
 
+    pthread_mutex_lock(&done_mut);
     slaves.finish();
     status_write();
 

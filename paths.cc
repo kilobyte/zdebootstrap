@@ -64,7 +64,7 @@ int open_in_target(const char *path, int flags)
 
     if (!proc_self)
     {
-        int ps=open("/proc/self", O_DIRECTORY|O_CLOEXEC);
+        int ps=open("/proc/self", O_PATH_RD|O_DIRECTORY|O_CLOEXEC);
         if (ps!=-1)
             if (!__sync_bool_compare_and_swap(&proc_self, 0, ps))
                 close(ps);

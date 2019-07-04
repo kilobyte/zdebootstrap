@@ -28,9 +28,6 @@ static unsigned parse_u(const char *arg, const char *errmsg)
 
 int main(int argc, char **argv)
 {
-    if ((orig_wd = open(".", O_DIRECTORY|O_PATH_RD|O_CLOEXEC)) == -1)
-        ERR("can't open current working directory\n");
-
     static struct option options[] =
     {
         { "target",	1, 0, 't' },

@@ -33,6 +33,8 @@ static int mkdir_p(const char *path)
 
 void mk_target(void)
 {
+    if ((orig_wd = open(".", O_DIRECTORY|O_PATH_RD|O_CLOEXEC)) == -1)
+        ERR("can't open current working directory\n");
     if (mkdir_p(target))
         ERR("can't mkdir -p '%s': %m\n", target);
     if (chdir(target))

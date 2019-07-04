@@ -8,11 +8,13 @@
 #include "paths.h"
 #include "zdebootstrap.h"
 
-const char *target;
+int verbose;
+const char *target = "target";
 int orig_wd, target_wd;
 static char *abs_target;
 static size_t abs_target_len;
 static int proc_self;
+plf::colony<const char*> path_excludes;
 
 static int mkdir_p(const char *path)
 {
